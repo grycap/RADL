@@ -1,0 +1,29 @@
+1. INSTALLATION
+
+1.1 REQUISITES
+
+RADL is based on python, so Python 2.6 or higher runtime and standard library must
+be installed in the system.
+
+If you will use pip to install the IM, all the requisites will be installed.
+You must install them if you will install RADL from sources.
+
+It is also required to install the Python Lex & Yacc library (http://www.dabeaz.com/ply/).
+It is available in all of the main distributions as 'python-ply' package.
+
+1.2 INSTALLING
+
+1.2.1 FROM PIP
+
+You only have to call the install command of the pip tool with the RADL package.
+
+	$ pip install RADL
+
+1.2.2 FROM SOURCE
+
+Select a proper path where to install the RADL parser (i.e. /usr/local/radl, 
+/opt/radl or other).
+
+	$ tar xvzf RADL-X.XX.tar.gz
+	$ chown -R root:root RADL-X.XX
+	$ mv RADL-X.XX /usr/local
