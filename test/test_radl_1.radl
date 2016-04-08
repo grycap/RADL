@@ -3,7 +3,7 @@ network private ()
 system main (
 cpu.arch='x86_64' and
 cpu.count>=1 and
-memory.size>=512 and
+memory.size>=512m and
 net_interfaces.count = 1 and
 net_interface.0.connection='publica' and
 disk.0.os.name='linux' and
@@ -12,6 +12,6 @@ disk.0.os.flavour='ubuntu'
 system wn (
 cpu.arch='x86_64' and
 cpu.count>=1 and
-memory.size>=512 and
+memory.size>=512m and
 disk.0.os.name='linux'
 )

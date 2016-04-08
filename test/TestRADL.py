@@ -65,6 +65,7 @@ class TestRADL(unittest.TestCase):
 		s = r.get_system_by_name("main")
 		self.assertEqual(s.getValue("cpu.arch"), "x86_64")
 		self.assertEqual(s.getValue("net_interface.0.connection"), "publica")
+		self.assertEqual(s.getValue("memory.size"), 536870912)
 		
 		radl_json = dump_radl_json(r)
 		r = parse_radl_json(radl_json)
@@ -72,6 +73,8 @@ class TestRADL(unittest.TestCase):
 		s = r.get_system_by_name("main")
 		self.assertEqual(s.getValue("cpu.arch"), "x86_64")
 		self.assertEqual(s.getValue("net_interface.0.connection"), "publica")
+		self.assertEqual(s.getValue("cpu.arch"), "x86_64")
+		self.assertEqual(s.getValue("memory.size"), 536870912)
 
 	def test_references(self):
 

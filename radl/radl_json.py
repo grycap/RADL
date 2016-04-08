@@ -25,7 +25,7 @@ try:
 except ImportError:
 	yaml = None
 
-from radl import Feature, Features, Aspect, RADL, configure, contextualize, contextualize_item, deploy, SoftFeatures, RADLParseException
+from radl import Feature, Features, Aspect, RADL, configure, contextualize, contextualize_item, deploy, SoftFeatures, RADLParseException, UnitToValue
 import radl 
 
 def encode_simple(d):
@@ -199,21 +199,26 @@ def featuresToSimple(a):
 						   for i in a.props[SoftFeatures.SOFT] ]
 		elif isinstance(v, tuple):
 			if v[0] and v[1] and v[0].value == v[1].value:
-				r[k] = v[0].value
+				r[k] = featureToSimple(v[0].value, v[0].unit)
 			elif v[0]:
-				r[k + "_min"] = v[0].value
+				r[k + "_min"] = featureToSimple(v[0].value, v[0].unit)
 			elif v[1]:
-				r[k + "_max"] = v[1].value
+				r[k + "_max"] = featureToSimple(v[1].value, v[1].unit)
 		elif isinstance(v, (set, list)):
-			r[k] = [ featureToSimple(i.value) for i in v ]
+			r[k] = [ featureToSimple(i.value, i.unit) for i in v ]
 		elif isinstance(v, dict):
-			r[k] = [ featureToSimple(i.value) for i in v.values() ]
+			r[k] = [ featureToSimple(i.value, i.unit) for i in v.values() ]
 		else:
-			r[k] = featureToSimple(v.value)
+			r[k] = featureToSimple(v.value, v.unit)
 	return r
 
-def featureToSimple(a):
-	if isinstance(a, (int, float, str)):
+def featureToSimple(a, u):
+	if isinstance(a, (int, float)):
+		if u:
+			return a * UnitToValue(u)
+		else:
+			return a
+	if isinstance(a, str):
 		return a
 	elif isinstance(a, unicode):
 		return str(a)
