@@ -2,3 +2,6 @@ RADL 1.00
 
     * First version outside the IM service
 
+RADL 1.01
+
+    * Bugfix in RADL json with units
