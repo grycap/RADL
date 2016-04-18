@@ -317,9 +317,7 @@ class Features(object):
 			elif f[1]:
 				return f[1].getValue()
 			raise Exception("Getting value from a property with a constrain")
-		if isinstance(f, list):
-			return f
-		raise Exception("Getting value from a not simple property.")
+		return f
 
 	def getFeature(self, prop):
 		"""Return the feature with that name."""
