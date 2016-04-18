@@ -5,3 +5,7 @@ RADL 1.00
 RADL 1.01
 
     * Bugfix in RADL json with units
+
+RADL 1.02
+
+    * Enable to return complex values in Features.getValue function
