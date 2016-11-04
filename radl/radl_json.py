@@ -77,7 +77,7 @@ def p_configure(a):
 			yaml.safe_load(recipes)
 		except Exception, e:
 			raise RADLParseException("Error parsing YAML: %s" % str(e))
-	return configure(a["id"], recipes)
+	return configure(a["id"], p_features(a), recipes)
 
 def p_contextualize(a):
 	assert a["class"] == "contextualize"
@@ -111,7 +111,7 @@ def p_features(a):
 			return [ Feature(k, "contains", p_feature(i)) for i in v ]
 		else:
 			return [ Feature(k, "=", p_feature(v)) ]
-	return [ i for k, v in a.items() if k != "class" and k != "id" for i in val(k, v) ]
+	return [ i for k, v in a.items() if k != "class" and k != "id" and k != "recipes" for i in val(k, v) ]
 
 def p_feature(a):
 	if isinstance(a, (int, float, str)):
@@ -143,14 +143,14 @@ def radlToSimple(radl):
 	return [ aspectToSimple(a) for a in aspects ]
 
 def aspectToSimple(a):
-	if isinstance(a, Features):
-		return cfeaturesToSimple(a)
-	elif isinstance(a, configure):
+	if isinstance(a, configure):
 		return configureToSimple(a)
 	elif isinstance(a, contextualize):
 		return contextualizeToSimple(a)
 	elif isinstance(a, deploy):
 		return deployToSimple(a)
+	elif isinstance(a, Features):
+		return cfeaturesToSimple(a)
 	assert False
 
 def configureToSimple(a):
@@ -158,7 +158,9 @@ def configureToSimple(a):
 	if a.reference or not a.recipes:
 		return { "class": "configure", "id": a.name, "reference": True }
 	else:
-		return { "class": "configure", "id": a.name, "recipes": a.recipes }
+		r = { "class": "configure", "id": a.name, "recipes": a.recipes }
+		r.update(featuresToSimple(a))
+		return r
 
 def contextualizeToSimple(a):
 	assert isinstance(a, contextualize)
@@ -213,7 +215,7 @@ def featuresToSimple(a):
 	return r
 
 def featureToSimple(a, u):
-	if isinstance(a, (int, float)):
+	if isinstance(a, (int, long, float)):
 		if u:
 			return a * UnitToValue(u)
 		else:

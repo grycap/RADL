@@ -26,6 +26,8 @@ soft 1 (
 )
 
 configure cursoaws (
+vault = 'encrypt' and
+vault.password = 'sompass'
 @begin
 ---
   - vars:

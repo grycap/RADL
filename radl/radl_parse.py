@@ -199,12 +199,12 @@ class RADLParser:
 	
 	def p_configure_sentence(self, t):
 		"""configure_sentence : CONFIGURE VAR
-							  | CONFIGURE VAR LPAREN RECIPE_BEGIN recipe RECIPE_END RPAREN"""
+							  | CONFIGURE VAR LPAREN features RECIPE_BEGIN recipe RECIPE_END RPAREN"""
 	
 		if len(t) == 3:
 			t[0] = configure(t[2], reference=True, line=t.lineno(1))
 		else:
-			t[0] = configure(t[2], t[5], line=t.lineno(1))
+			t[0] = configure(t[2], t[4], t[6], line=t.lineno(1))
 	
 	def p_recipe(self, t):
 		"""recipe : RECIPE_LINE

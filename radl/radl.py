@@ -611,10 +611,10 @@ class contextualize(Aspect, object):
 			return default
 
 		
-class configure(Aspect):
+class configure(Features, Aspect):
 	"""Store a RADL ``configure``."""
 
-	def __init__(self, name, recipe="", reference=False, line=None):
+	def __init__(self, name, features=None, recipe="", reference=False, line=None):
 		# encode the recipe to enable to set special chars in the recipes
 		self.recipes = str(recipe.encode('utf-8', 'ignore'))
 		"""Recipe content."""
@@ -622,6 +622,7 @@ class configure(Aspect):
 		"""Configure id."""
 		self.reference = reference
 		"""True if it is only a reference and it isn't a definition."""
+		Features.__init__(self, features)
 		self.line = line
 
 	def getId(self):
@@ -632,8 +633,15 @@ class configure(Aspect):
 			return "configure %s" % self.name
 		return "configure %s (\n@begin\n%s\n@end\n)" % (self.name, self.recipes)
 
-	def check(self, _):
+	def check(self, radl):
 		"""Check this configure."""
+		"""Check the features in this network."""
+
+		SIMPLE_FEATURES = {
+			"vault": (str, ["ENCRYPT", "ENCRYPTED"]),
+			"vault.password": (str, None)
+		}
+		self.check_simple(SIMPLE_FEATURES, radl)
 
 		try:
 			import yaml
