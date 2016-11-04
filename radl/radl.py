@@ -631,7 +631,7 @@ class configure(Features, Aspect):
 	def __str__(self):
 		if self.reference or not self.recipes:
 			return "configure %s" % self.name
-		return "configure %s (\n@begin\n%s\n@end\n)" % (self.name, self.recipes)
+		return "configure %s (\n%s\n@begin\n%s\n@end\n)" % (self.name, Features.__str__(self), self.recipes)
 
 	def check(self, radl):
 		"""Check this configure."""
