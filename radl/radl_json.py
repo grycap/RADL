@@ -108,7 +108,10 @@ def p_features(a):
 		elif k.endswith("_max") and isinstance(v, (int, float)):
 			return [ Feature(k[0:-4], "<=", v) ]
 		elif isinstance(v, list):
-			return [ Feature(k, "contains", p_feature(i)) for i in v ]
+			if k == "disk.0.image.url":
+				return [ Feature(k, "=", v) ]
+			else:
+				return [ Feature(k, "contains", p_feature(i)) for i in v ]
 		else:
 			return [ Feature(k, "=", p_feature(v)) ]
 	return [ i for k, v in a.items() if k != "class" and k != "id" for i in val(k, v) ]
@@ -222,6 +225,8 @@ def featureToSimple(a, u):
 		return a
 	elif isinstance(a, unicode):
 		return str(a)
+	elif isinstance(a, list):
+		return a
 	elif isinstance(a, Aspect):
 		return referenceToSimple(a)
 	elif isinstance(a, Features):

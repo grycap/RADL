@@ -9,3 +9,7 @@ RADL 1.01
 RADL 1.02
 
     * Enable to return complex values in Features.getValue function
+
+RADL 1.03
+
+    * Bugfix using a list of URLs in disk.0.image.url in RADL in JSON format

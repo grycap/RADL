@@ -13,5 +13,6 @@ system wn (
 cpu.arch='x86_64' and
 cpu.count>=1 and
 memory.size>=512m and
-disk.0.os.name='linux'
+disk.0.os.name='linux' and
+disk.0.image.url = ['one://server.com/1','one://server2.com/1']
 )
