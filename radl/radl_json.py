@@ -108,7 +108,8 @@ def p_features(a):
 		elif k.endswith("_max") and isinstance(v, (int, float)):
 			return [ Feature(k[0:-4], "<=", v) ]
 		elif isinstance(v, list):
-			if k == "disk.0.image.url":
+			# disks urls can be a list
+			if k.startswith("disk") and k.endswith("image.url"):
 				return [ Feature(k, "=", v) ]
 			else:
 				return [ Feature(k, "contains", p_feature(i)) for i in v ]
