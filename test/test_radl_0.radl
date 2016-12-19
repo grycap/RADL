@@ -29,8 +29,8 @@ configure cursoaws (
 @begin
 ---
   - vars:
-    ak_00: BBBBBBBBBBBBBBB0AA
-    sk_00: ffffffffffff23202m/Sfasf/Ahaspe70efsa
+    - ak_00: BBBBBBBBBBBBBBB0AA
+    - sk_00: ffffffffffff23202m/Sfasf/Ahaspe70efsa
 
     tasks:
     - name: Create user

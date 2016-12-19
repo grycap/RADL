@@ -18,7 +18,7 @@ import ply.lex as lex
 import ply.yacc as yacc
 
 import os
-from radl import Feature, RADL, system, network, ansible, configure, contextualize, contextualize_item, \
+from .radl import Feature, RADL, system, network, ansible, configure, contextualize, contextualize_item, \
 				 deploy, SoftFeatures, Features, RADLParseException
 
 class RADLParser:
