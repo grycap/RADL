@@ -14,7 +14,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import os
-import sys
+
+try:
+	unicode
+except:
+	unicode = bytes
 
 try:
 	import json
@@ -25,13 +29,17 @@ try:
 except ImportError:
 	yaml = None
 
-from radl import Feature, Features, Aspect, RADL, configure, contextualize, contextualize_item, deploy, SoftFeatures, RADLParseException, UnitToValue
-import radl 
+from .radl import Feature, Features, Aspect, RADL, configure, contextualize, contextualize_item, deploy, SoftFeatures, RADLParseException, UnitToValue
+
+try:
+	import radl.radl as radl
+except:
+	import radl
 
 def encode_simple(d):
 	"""Encode strings in basic python objects."""
 	if isinstance(d, unicode): return d.encode()
-	if isinstance(d, list): return map(encode_simple, d)
+	if isinstance(d, list): return list(map(encode_simple, d))
 	if isinstance(d, dict): return dict([ (encode_simple(k), encode_simple(v)) for k, v in d.items() ])
 	return d
 		
@@ -75,7 +83,7 @@ def p_configure(a):
 	if isinstance(recipes, str) and yaml:
 		try:
 			yaml.safe_load(recipes)
-		except Exception, e:
+		except Exception as e:
 			raise RADLParseException("Error parsing YAML: %s" % str(e))
 	return configure(a["id"], recipes)
 
@@ -108,6 +116,7 @@ def p_features(a):
 		elif k.endswith("_max") and isinstance(v, (int, float)):
 			return [ Feature(k[0:-4], "<=", v) ]
 		elif isinstance(v, list):
+			v = list(v)
 			# disks urls can be a list
 			if k.startswith("disk") and k.endswith("image.url"):
 				return [ Feature(k, "=", v) ]
@@ -121,7 +130,7 @@ def p_feature(a):
 	if isinstance(a, (int, float, str)):
 		return a
 	elif isinstance(a, unicode):
-		return str(a)
+		return a.decode()
 	elif isinstance(a, dict) and "class" in a:
 		return p_cfeatures(a)
 	elif isinstance(a, dict):
@@ -136,14 +145,14 @@ def dump_radl(radl, enter="\n", indent="  "):
 	separators = (",", ":" if indent is None else ": ")
 	return json.dumps(radlToSimple(radl), indent=indent, sort_keys=sort_keys, separators=separators)
 
-def radlToSimple(radl):
+def radlToSimple(radl_data):
 	"""
 	Return a list of maps whose values are only other maps or lists.
 	"""
 
-	aspects = radl.ansible_hosts + radl.networks + radl.systems + radl.configures + radl.deploys
-	if radl.contextualize.items is not None:
-		aspects.append(radl.contextualize)
+	aspects = radl_data.ansible_hosts + radl_data.networks + radl_data.systems + radl_data.configures + radl_data.deploys
+	if radl_data.contextualize.items is not None:
+		aspects.append(radl_data.contextualize)
 	return [ aspectToSimple(a) for a in aspects ]
 
 def aspectToSimple(a):
@@ -225,7 +234,7 @@ def featureToSimple(a, u):
 	if isinstance(a, str):
 		return a
 	elif isinstance(a, unicode):
-		return str(a)
+		return a.decode()
 	elif isinstance(a, list):
 		return a
 	elif isinstance(a, Aspect):

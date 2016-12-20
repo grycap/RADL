@@ -17,6 +17,11 @@
 import copy
 from distutils.version import LooseVersion
 
+try:
+	unicode
+except:
+	unicode = bytes
+
 def UnitToValue(unit):
 	"""Return the value of an unit."""
 
@@ -274,7 +279,7 @@ class Features(object):
 			inter0 = self.props.get(f.prop, (None, None))
 			try:
 				self.props[f.prop] = Features._applyInter(inter0, inter1, conflict)
-			except Exception, e:
+			except Exception as e:
 				raise RADLParseException("%s. Involved features: %s" % (e, [str(f0) for f0 in inter0]),
 										 line=f.line)
 		elif isinstance(f, SoftFeatures):
@@ -384,15 +389,16 @@ class Features(object):
 		assert conflict in OPTIONS, "Invalid value in `conflict`."
 
 		# Compute the comparison of the interval extremes
+		min_int = -2**63
 		# Remember, None <= number and None <= None are True, but number <= None is False.
-		inter0 = tuple([f.getValue() if f else None for f in finter0])
-		inter1 = tuple([f.getValue() if f else None for f in finter1])
+		inter0 = tuple([f.getValue() if f else min_int for f in finter0])
+		inter1 = tuple([f.getValue() if f else min_int for f in finter1])
 		le00 = inter0[0] <= inter1[0]						 # finter0[0] <= finter1[0]
-		le01 = inter1[1] == None or inter0[0] <= inter1[1]	# finter0[0] <= finter1[1]
-		le11 = inter1[1] == None or (inter0[1] != None and inter0[1] <= inter1[1])
+		le01 = inter1[1] == min_int or inter0[0] <= inter1[1]	# finter0[0] <= finter1[1]
+		le11 = inter1[1] == min_int or (inter0[1] != min_int and inter0[1] <= inter1[1])
 															# finter0[1] <= finter1[1]
 		ge00 = not le00 or inter0[0] == inter1[0]			 # finter0[0] >= finter1[0]
-		ge10 = inter0[1] == None or inter0[1] >= inter1[0]	# finter0[1] >= finter1[0]
+		ge10 = inter0[1] == min_int or inter0[1] >= inter1[0]	# finter0[1] >= finter1[0]
 
 		#print "\n".join("%s: %s" % (s, v) for v, s in [
 		#	(le00, "finter0[0] <= finter1[0]"),
@@ -616,9 +622,9 @@ class configure(Aspect):
 
 	def __init__(self, name, recipe="", reference=False, line=None):
 		# encode the recipe to enable to set special chars in the recipes
-		self.recipes = str(recipe.encode('utf-8', 'ignore'))
+		self.recipes = str(recipe.encode('utf-8', 'ignore').decode())
 		"""Recipe content."""
-		self.name = str(name.encode('utf-8', 'ignore'))
+		self.name = name
 		"""Configure id."""
 		self.reference = reference
 		"""True if it is only a reference and it isn't a definition."""
@@ -641,7 +647,7 @@ class configure(Aspect):
 			return True
 		try:
 			yaml.load(self.recipes)
-		except Exception, e:
+		except Exception as e:
 			raise RADLParseException("Invalid YAML code: %s." % e, line=self.line)
 		return True
 
