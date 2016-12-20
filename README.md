@@ -27,13 +27,13 @@ Read the documentation at http://imdocs.readthedocs.org/en/latest/radl.html.
 --------------
 
 RADL is based on python, so Python 2.6 or higher runtime and standard library must
-be installed in the system.
+be installed in the system. It is compatible with both Python 2 and Python 3.
 
 If you will use pip to install the IM, all the requisites will be installed.
 You must install them if you will install RADL from sources.
 
 It is also required to install the Python Lex & Yacc library (http://www.dabeaz.com/ply/).
-It is available in all of the main distributions as 'python-ply' package.
+It is available in all of the main distributions as 'python-ply' package or 'ply' using pip.
 
 
 1.2 INSTALLING
