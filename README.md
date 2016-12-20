@@ -3,6 +3,7 @@
 
 * Version ![PyPI](https://img.shields.io/pypi/v/radl.svg)
 * PyPI ![PypI](https://img.shields.io/pypi/dm/RADL.svg)
+* Build [![Build Status](http://jenkins.i3m.upv.es/buildStatus/icon?job=radl-parser)](http://jenkins.i3m.upv.es/job/radl-parser/)
 
 The main purpose of the Resource and Application description Language (RADL) is to specify 
 the requirements of the scientific applications needed to be deployed in a virtualized 
