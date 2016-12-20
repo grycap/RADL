@@ -13,3 +13,7 @@ RADL 1.02
 RADL 1.03
 
     * Bugfix using a list of URLs in disk.0.image.url in RADL in JSON format
+
+RADL 1.04
+
+    * Add support for python 3.
