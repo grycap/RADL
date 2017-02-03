@@ -22,10 +22,10 @@ from setuptools import setup
 setup(  name="RADL", version=version, 
         author='GRyCAP - Universitat Politecnica de Valencia',
         author_email='micafer1@upv.es',
-        url='http://www.grycap.upv.es/im',
+        url='https://github.com/grycap/RADL',
         packages=['radl'],
         license="GPL version 3, http://www.gnu.org/licenses/gpl-3.0.txt",
-        long_description="The main purpose of the Resource and Application description Language (RADL) is to specify the requirements of the scientific applications needed to be deployed in a virtualized computational infrastructure (cloud).",
+        long_description="The main purpose of the Resource and Application description Language (RADL) is to specify the requirements of the scientific applications needed to be deployed in a virtualized computational infrastructure (cloud). It is compatible with both Python 2 and Python 3",
         description="Resource and Application Description Language (RADL) parser.",
         platforms=["any"],
         install_requires=["ply"]
