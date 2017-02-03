@@ -17,3 +17,7 @@ RADL 1.03
 RADL 1.04
 
     * Add support for python 3.
+
+RADL 1.05
+
+    * Fix error in some cases if the image.url is an unicode.
