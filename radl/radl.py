@@ -1057,7 +1057,7 @@ class system(Features, Aspect):
 				"ip": (str, None),
 				"dns_name": (str, None) },
 			"disk": {
-				"image.url": ((str,list), system._check_disk_image_url),
+				"image.url": ((str,unicode,list), system._check_disk_image_url),
 				"image.name": (str, None),
 				"type": (str, ["SWAP", "ISO", "FILESYSTEM"]),
 				"device": (str, None),
