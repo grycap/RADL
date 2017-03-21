@@ -46,14 +46,14 @@ class TestRADL(unittest.TestCase):
 	def test_basic(self):
 		r = parse_radl(TESTS_PATH + "/test_radl_0.radl")
 		self.radl_check(r, [1, 1, 1, 1, 0])
-		s = r.get_system_by_name("cursoaws")
+		s = r.get_system_by_name("curso-aws")
 		self.assertIsInstance(s, system)
 		self.assertEqual(len(s.features), 17)
 		self.assertEqual(s.getValue("disk.0.os.name"), "linux")
 		
 		radl_json = dump_radl_json(r)
 		r = parse_radl_json(radl_json)
-		s = r.get_system_by_name("cursoaws")
+		s = r.get_system_by_name("curso-aws")
 		self.assertIsInstance(s, system)
 		self.assertEqual(len(s.features), 17)
 		self.assertEqual(s.getValue("disk.0.os.name"), "linux")

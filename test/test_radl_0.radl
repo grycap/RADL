@@ -1,5 +1,5 @@
 network publica (outbound = 'yes' and outports='8899-8899,22-22')
-system cursoaws (
+system curso-aws (
 cpu.arch='x86_64' and
 cpu.count>=1 and
 memory.size>=512m and
@@ -25,7 +25,7 @@ soft 1 (
 )
 )
 
-configure cursoaws (
+configure curso-aws (
 @begin
 ---
   - vars:
@@ -38,4 +38,4 @@ configure cursoaws (
 @end
 )
 
-deploy cursoaws 1
+deploy curso-aws 1
