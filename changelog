@@ -21,3 +21,7 @@ RADL 1.04
 RADL 1.05
 
     * Fix error in some cases if the image.url is an unicode.
+
+RADL 1.06
+
+    * Fix error with character "-" in system names.
