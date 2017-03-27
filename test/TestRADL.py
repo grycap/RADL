@@ -183,6 +183,18 @@ net_interface.0.connection = 'publica'
 		with self.assertRaises(RADLParseException):
 			self.radl_check(r)
 
+		radl = """
+network publica (outbound = 'yes' and outports='8899-8899,22-22,1:10')
+
+system main (
+net_interface.0.connection = 'publica'
+)		"""
+		r = parse_radl(radl)
+		r.check()
+		net = r.get_network_by_id('publica')
+		expected_res = [(8899, 'tcp', 8899, 'tcp'), (22, 'tcp', 22, 'tcp'), (1, 'tcp', 10, 'tcp', True)]
+		self.assertEqual(net.getOutPorts(), expected_res)
+
 	def test_check_password(self):
 
 		radl = """

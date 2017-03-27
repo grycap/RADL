@@ -726,32 +726,48 @@ class network(Features, Aspect):
 		8899-8899,22-22
 		8899/tcp,22/udp
 		8899,22
-		Returns a list of tuple with the format: (remote_port,remote_protocol,local_port,local_protocol)
+        1:10/tcp,9:22/udp
+        1:10,9:22
+		Returns a list of tuple with the format: (remote_port,remote_protocol,local_port,local_protocol,is_range)
 		"""
 		res = []
 		ports = outports.split(',')
 		for port in ports:
-			parts = port.split('-')
-			remote_port = parts[0]
-			if len(parts) > 1:
-				local_port = parts[1]
+			if port.find('-') != -1 and port.find(':') != -1:
+				raise RADLParseException('Port range (:) and port mapping (-) cannot be combined.')
+			if port.find(':') != -1:
+				parts = port.split(':')
+				range_init = parts[0]
+				range_end = parts[1]
+				range_end_parts = range_end.split("/")
+				if len(range_end_parts) > 1:
+					protocol = range_end_parts[1]
+					range_end = range_end_parts[0]
+				else:
+					protocol = "tcp"
+				res.append((int(range_init),protocol,int(range_end),protocol, True))
 			else:
-				local_port = remote_port
-
-			local_port_parts = local_port.split("/")
-			if len(local_port_parts) > 1:
-				local_protocol = local_port_parts[1]
-				local_port = local_port_parts[0]
-			else:
-				local_protocol = "tcp"
-		
-			remote_port_parts = remote_port.split("/")	
-			if len(remote_port_parts) > 1:
-				remote_protocol = remote_port_parts[1]
-				remote_port = remote_port_parts[0]
-			else:
-				remote_protocol = "tcp"
-			res.append((int(remote_port),remote_protocol,int(local_port),local_protocol))
+				parts = port.split('-')
+				remote_port = parts[0]
+				if len(parts) > 1:
+					local_port = parts[1]
+				else:
+					local_port = remote_port
+	
+				local_port_parts = local_port.split("/")
+				if len(local_port_parts) > 1:
+					local_protocol = local_port_parts[1]
+					local_port = local_port_parts[0]
+				else:
+					local_protocol = "tcp"
+			
+				remote_port_parts = remote_port.split("/")	
+				if len(remote_port_parts) > 1:
+					remote_protocol = remote_port_parts[1]
+					remote_port = remote_port_parts[0]
+				else:
+					remote_protocol = "tcp"
+				res.append((int(remote_port),remote_protocol,int(local_port),local_protocol))
 		return res
 
 	def getOutPorts(self):
