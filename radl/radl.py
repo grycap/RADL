@@ -67,9 +67,11 @@ def check_outports_format(outports, _):
 	8899-8899,22-22
 	8899/tcp,22/udp
 	8899,22
+	1:10/tcp,9:22/udp
+	1:10,9:22
 	"""
 	try:
-		network.parseOutPorts(outports.getValue())
+		outport.parseOutPorts(outports.getValue())
 	except:
 		return False
 	else:
@@ -108,9 +110,9 @@ class Feature:
 			return "{0} {1} ['{2}']".format(self.prop, self.operator, "','".join(self.value)) 
 		else:
 			return ("{0} {1} ({2})" if self.operator == "contains" else
-		        	"{0} {1} '{2}'" if isinstance(self.value, str) or isinstance(self.value, unicode) else
-		        	"{0} {1} {2}{3}").format(self.prop, self.operator, self.value,
-		                                 self.unit if self.unit else "") 
+					"{0} {1} '{2}'" if isinstance(self.value, str) or isinstance(self.value, unicode) else
+					"{0} {1} {2}{3}").format(self.prop, self.operator, self.value,
+										 self.unit if self.unit else "") 
 
 	def clone(self):
 		"""Return a copy of this Feature."""
@@ -716,44 +718,6 @@ class network(Features, Aspect):
 
 		return network(name, [Feature("outbound", "=", "yes" if public else "no")])
 
-	@staticmethod
-	def parseOutPorts(outports):
-		"""
-		Parse the outports string
-		Valid formats:
-		8899/tcp-8899/tcp,22/tcp-22/tcp
-		8899/tcp-8899,22/tcp-22
-		8899-8899,22-22
-		8899/tcp,22/udp
-		8899,22
-		Returns a list of tuple with the format: (remote_port,remote_protocol,local_port,local_protocol)
-		"""
-		res = []
-		ports = outports.split(',')
-		for port in ports:
-			parts = port.split('-')
-			remote_port = parts[0]
-			if len(parts) > 1:
-				local_port = parts[1]
-			else:
-				local_port = remote_port
-
-			local_port_parts = local_port.split("/")
-			if len(local_port_parts) > 1:
-				local_protocol = local_port_parts[1]
-				local_port = local_port_parts[0]
-			else:
-				local_protocol = "tcp"
-		
-			remote_port_parts = remote_port.split("/")	
-			if len(remote_port_parts) > 1:
-				remote_protocol = remote_port_parts[1]
-				remote_port = remote_port_parts[0]
-			else:
-				remote_protocol = "tcp"
-			res.append((int(remote_port),remote_protocol,int(local_port),local_protocol))
-		return res
-
 	def getOutPorts(self):
 		"""
 		Get the outports of this network.
@@ -762,7 +726,7 @@ class network(Features, Aspect):
 		"""
 		outports = self.getValue("outports")
 		if outports:
-			return self.parseOutPorts(outports)
+			return outport.parseOutPorts(outports)
 		else:
 			return None
 
@@ -842,7 +806,7 @@ class system(Features, Aspect):
 
 		for f in self.features:
 			if (f.prop.startswith("net_interface.") and
-			    f.prop.endswith(".ip") and f.value == ip):
+				f.prop.endswith(".ip") and f.value == ip):
 				return True
 		return False
 
@@ -1373,3 +1337,98 @@ class ansible(Features, Aspect):
 		return tuple([ self.getValue(credentials_base + p) for p in [
 						 "username", "password", "private_key"]
 					 ])
+
+class outport():
+	"""Store OutPorts data"""
+
+	def __init__(self, port_init, port_end, protocol, range=False):
+		self.port_init = int(port_init)
+		self.port_end = int(port_end)
+		self.protocol = protocol
+		self.range = range
+
+	def __eq__(self, other):
+		return (self.port_init == other.port_init and self.port_end == other.port_end
+				and self.protocol == other.protocol and self.range == other.range)
+
+	def __str__(self):
+		if self.is_range:
+			return "%d:%d/%s" % (self.port_init, self.port_end, self.protocol)
+		else:
+			return "%d-%d/%s" % (self.port_init, self.port_end, self.protocol)
+
+	def is_range(self):
+		return self.range
+	
+	def get_port_init(self):
+		return self.port_init
+
+	def get_port_end(self):
+		return self.port_end
+
+	def get_local_port(self):
+		return self.port_end
+
+	def get_remote_port(self):
+		return self.port_init
+
+	def get_protocol(self):
+		return self.protocol
+
+	@staticmethod
+	def parseOutPorts(outports):
+		"""
+		Parse the outports string
+		Valid formats:
+		8899/tcp-8899/tcp,22/tcp-22/tcp
+		8899/tcp-8899,22/tcp-22
+		8899-8899,22-22
+		8899/tcp,22/udp
+		8899,22
+		1:10/tcp,9:22/udp
+		1:10,9:22
+		Returns a list of tuple with the format: (remote_port,remote_protocol,local_port,local_protocol,is_range)
+		"""
+		res = []
+		ports = outports.split(',')
+		for port in ports:
+			if port.find('-') != -1 and port.find(':') != -1:
+				raise RADLParseException('Port range (:) and port mapping (-) cannot be combined.')
+			if port.find(':') != -1:
+				parts = port.split(':')
+				range_init = parts[0]
+				range_end = parts[1]
+				range_end_parts = range_end.split("/")
+				if len(range_end_parts) > 1:
+					protocol = range_end_parts[1]
+					range_end = range_end_parts[0]
+				else:
+					protocol = "tcp"
+				res.append(outport(range_init, range_end, protocol, True))
+			else:
+				parts = port.split('-')
+				remote_port = parts[0]
+				if len(parts) > 1:
+					local_port = parts[1]
+				else:
+					local_port = remote_port
+	
+				local_port_parts = local_port.split("/")
+				if len(local_port_parts) > 1:
+					local_protocol = local_port_parts[1]
+					local_port = local_port_parts[0]
+				else:
+					local_protocol = "tcp"
+			
+				remote_port_parts = remote_port.split("/")	
+				if len(remote_port_parts) > 1:
+					remote_protocol = remote_port_parts[1]
+					remote_port = remote_port_parts[0]
+				else:
+					remote_protocol = "tcp"
+
+				if remote_protocol != local_protocol:
+					raise RADLParseException("Different protocols used in local and remote outports.")
+
+				res.append(outport(remote_port, local_port, local_protocol))
+		return res

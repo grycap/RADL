@@ -25,7 +25,7 @@ sys.path.append("..")
 sys.path.append(".")
 
 from radl.radl_parse import parse_radl
-from radl.radl import RADL, Features, Feature, RADLParseException, system
+from radl.radl import RADL, Features, Feature, RADLParseException, system, outport
 from radl.radl_json import parse_radl as parse_radl_json, dump_radl as dump_radl_json
 import unittest
 
@@ -182,6 +182,18 @@ net_interface.0.connection = 'publica'
 		r = parse_radl(radl)
 		with self.assertRaises(RADLParseException):
 			self.radl_check(r)
+
+		radl = """
+network publica (outbound = 'yes' and outports='8899-8899,22-22,1:10')
+
+system main (
+net_interface.0.connection = 'publica'
+)		"""
+		r = parse_radl(radl)
+		r.check()
+		net = r.get_network_by_id('publica')
+		expected_res = [outport(8899, 8899, 'tcp'), outport(22, 22, 'tcp'), outport(1, 10, 'tcp', True)]
+		self.assertEqual(net.getOutPorts(), expected_res)
 
 	def test_check_password(self):
 
