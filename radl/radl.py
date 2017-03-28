@@ -1341,15 +1341,15 @@ class ansible(Features, Aspect):
 class outport():
 	"""Store OutPorts data"""
 
-	def __init__(self, port_init, port_end, protocol, is_range=False):
+	def __init__(self, port_init, port_end, protocol, range=False):
 		self.port_init = int(port_init)
 		self.port_end = int(port_end)
 		self.protocol = protocol
-		self.is_range = is_range
+		self.range = range
 
 	def __eq__(self, other):
 		return (self.port_init == other.port_init and self.port_end == other.port_end
-				and self.protocol == other.protocol and self.is_range == other.is_range)
+				and self.protocol == other.protocol and self.range == other.range)
 
 	def __str__(self):
 		if self.is_range:
@@ -1358,7 +1358,7 @@ class outport():
 			return "%d-%d/%s" % (self.port_init, self.port_end, self.protocol)
 
 	def is_range(self):
-		return self.is_range
+		return self.range
 	
 	def get_port_init(self):
 		return self.port_init
