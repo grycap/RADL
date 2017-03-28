@@ -67,8 +67,8 @@ def check_outports_format(outports, _):
 	8899-8899,22-22
 	8899/tcp,22/udp
 	8899,22
-    1:10/tcp,9:22/udp
-    1:10,9:22
+	1:10/tcp,9:22/udp
+	1:10,9:22
 	"""
 	try:
 		outport.parseOutPorts(outports.getValue())
@@ -110,9 +110,9 @@ class Feature:
 			return "{0} {1} ['{2}']".format(self.prop, self.operator, "','".join(self.value)) 
 		else:
 			return ("{0} {1} ({2})" if self.operator == "contains" else
-		        	"{0} {1} '{2}'" if isinstance(self.value, str) or isinstance(self.value, unicode) else
-		        	"{0} {1} {2}{3}").format(self.prop, self.operator, self.value,
-		                                 self.unit if self.unit else "") 
+					"{0} {1} '{2}'" if isinstance(self.value, str) or isinstance(self.value, unicode) else
+					"{0} {1} {2}{3}").format(self.prop, self.operator, self.value,
+										 self.unit if self.unit else "") 
 
 	def clone(self):
 		"""Return a copy of this Feature."""
@@ -806,7 +806,7 @@ class system(Features, Aspect):
 
 		for f in self.features:
 			if (f.prop.startswith("net_interface.") and
-			    f.prop.endswith(".ip") and f.value == ip):
+				f.prop.endswith(".ip") and f.value == ip):
 				return True
 		return False
 
@@ -1357,13 +1357,22 @@ class outport():
 		else:
 			return "%d-%d/%s" % (self.port_init, self.port_end, self.protocol)
 
-	def isRange(self):
+	def is_range(self):
 		return self.is_range
 	
-	def getPorts(self):
-		return self.port_init, self.port_end
+	def get_port_init(self):
+		return self.port_init
 
-	def getProtocol(self):
+	def get_port_end(self):
+		return self.port_end
+
+	def get_local_port(self):
+		return self.port_end
+
+	def get_remote_port(self):
+		return self.port_init
+
+	def get_protocol(self):
 		return self.protocol
 
 	@staticmethod
