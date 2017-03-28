@@ -25,3 +25,7 @@ RADL 1.05
 RADL 1.06
 
     * Fix error with character "-" in system names.
+
+RADL 1.07
+
+    * Enable to specify a port range in outports: 1:10/tcp.
