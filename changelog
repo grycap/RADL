@@ -26,6 +26,7 @@ RADL 1.06
 
     * Fix error with character "-" in system names.
 
-RADL 1.07
+RADL 1.10
 
     * Enable to specify a port range in outports: 1:10/tcp.
+    * New class outpots to store OutPorts data: now network.parseOutPorts returns list of outports objects.
