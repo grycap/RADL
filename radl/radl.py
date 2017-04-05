@@ -722,7 +722,7 @@ class network(Features, Aspect):
 		"""
 		Get the outports of this network.
 		outports format: 22/tcp-22/tcp,8899/tcp,8800
-		Returns a list of tuples with the format: (remote_port,remote_protocol,local_port,local_protocol)
+		Returns a list of outport objects
 		"""
 		outports = self.getValue("outports")
 		if outports:
@@ -1387,7 +1387,7 @@ class outport():
 		8899,22
 		1:10/tcp,9:22/udp
 		1:10,9:22
-		Returns a list of tuple with the format: (remote_port,remote_protocol,local_port,local_protocol,is_range)
+		Returns a list of outport objects
 		"""
 		res = []
 		ports = outports.split(',')
