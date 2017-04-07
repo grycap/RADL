@@ -20,8 +20,9 @@ and easily extensible with other tools, like contextualization languages such as
 
 Read the documentation at http://imdocs.readthedocs.org/en/latest/radl.html.
 
-1. INSTALLATION
-===============
+ 
+1 INSTALLATION
+============
 
 1.1 REQUISITES
 --------------
