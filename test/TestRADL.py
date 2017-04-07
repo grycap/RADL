@@ -316,5 +316,20 @@ net_interface.0.connection = 'net'
 		with self.assertRaises(RADLParseException):
 			self.radl_check(r)
 
+	def test_radl_with_two_public_nets(self):
+		radl = """
+network public_net ( outbound = 'yes' )
+network public_net_1 ( outbound = 'yes' )
+
+system node_with_nets (
+net_interface.0.connection = 'public_net_1' and
+net_interface.1.connection = 'public_net' and
+net_interface.1.ip = '10.0.0.1'
+)
+		"""
+		r = parse_radl(radl)
+		r.check()
+		self.assertEqual(r.getPublicIP(), "10.0.0.1")
+
 if __name__ == "__main__":
 	unittest.main()

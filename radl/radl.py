@@ -1196,8 +1196,6 @@ class RADL:
 					ip = s.getValue("net_interface.%d.ip" % i)
 					if ip:
 						return ip
-					else:
-						break
 				i += 1
 		return None
 
