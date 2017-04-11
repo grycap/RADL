@@ -51,7 +51,8 @@ class RADLParser:
 		'VAR',
 		'CONTAINS',
 		'DEPLOY',
-		'CONFIGURE',
+        'UNCONFIGURE',
+        'CONFIGURE',
 		'SYSTEM',
 		'NETWORK',
 		'ANSIBLE',
@@ -145,7 +146,8 @@ class RADLParser:
 		'and' : 'AND',
 		'contains' : 'CONTAINS',
 		'deploy' : 'DEPLOY',
-		'configure': 'CONFIGURE',
+        'configure': 'CONFIGURE',
+        'unconfigure': 'UNCONFIGURE',
 		'contextualize': 'CONTEXTUALIZE',
 		'step':'STEP',
 		'with':'WITH'
@@ -247,14 +249,18 @@ class RADLParser:
 	def p_contextualize_item(self, t):
 		"""contextualize_item : SYSTEM VAR CONFIGURE VAR
 							  | SYSTEM VAR CONFIGURE VAR STEP NUMBER
-							  | SYSTEM VAR CONFIGURE VAR WITH VAR"""
-	
+                              | SYSTEM VAR UNCONFIGURE VAR
+                              | SYSTEM VAR UNCONFIGURE VAR STEP NUMBER
+                              | SYSTEM VAR CONFIGURE VAR WITH VAR"""
+		unconfigure = False
+		if t[3] == "unconfigure":
+			unconfigure = True
 		if len(t) == 5:
-			t[0] = contextualize_item(t[2], t[4], line=t.lineno(1))
+			t[0] = contextualize_item(t[2], t[4], line=t.lineno(1), unconfigure=unconfigure)
 		elif t[5] == "with":
-			t[0] = contextualize_item(t[2], t[4], ctxt_tool=t[6], line=t.lineno(1))
+			t[0] = contextualize_item(t[2], t[4], ctxt_tool=t[6], line=t.lineno(1), unconfigure=unconfigure)
 		else:
-			t[0] = contextualize_item(t[2], t[4], num=t[6], line=t.lineno(1))
+			t[0] = contextualize_item(t[2], t[4], num=t[6], line=t.lineno(1), unconfigure=unconfigure)
 	
 	def p_network_sentence(self, t):
 		"""network_sentence : NETWORK VAR

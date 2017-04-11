@@ -93,7 +93,10 @@ def p_contextualize(a):
 						 max_time=a.get("max_time", 0))
 
 def p_contextualize_item(a):
-	return contextualize_item(a["system"], a["configure"], a.get("step", 0), a.get("ctxt_tool", None))
+	if "unconfigure" in a:
+		return contextualize_item(a["system"], a["unconfigure"], a.get("step", 0), a.get("ctxt_tool", None), unconfigure=True)
+	else:
+		return contextualize_item(a["system"], a["configure"], a.get("step", 0), a.get("ctxt_tool", None))
 
 def p_deploy(a):
 	assert a["class"] == "deploy"
@@ -183,7 +186,10 @@ def contextualizeToSimple(a):
 
 def contextualizeItemToSimple(a):
 	assert isinstance(a, contextualize_item)
-	r = {"system": a.system, "configure": a.configure}
+	if a.unconfigure:
+		r = {"system": a.system, "unconfigure": a.configure}
+	else:
+		r = {"system": a.system, "configure": a.configure}
 	if a.num: r["step"] = a.num
 	if a.ctxt_tool: r["ctxt_tool"] = a.ctxt_tool
 	return r

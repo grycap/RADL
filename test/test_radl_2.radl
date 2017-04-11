@@ -1,0 +1,37 @@
+network publica (outbound = 'yes')
+system test (
+cpu.count>=1
+)
+
+configure test (
+@begin
+---
+  - vars:
+    - ak_00: BBBBBBBBBBBBBBB0AA
+    - sk_00: ffffffffffff23202m/Sfasf/Ahaspe70efsa
+
+    tasks:
+    - name: Create user
+      user: name=alucloud00 password=1234
+@end
+)
+
+configure deletetest (
+@begin
+---
+  - vars:
+    - ak_00: BBBBBBBBBBBBBBB0AA
+    - sk_00: ffffffffffff23202m/Sfasf/Ahaspe70efsa
+
+    tasks:
+    - name: Create user
+      user: name=alucloud00 password=1234
+@end
+)
+
+contextualize (
+        system test configure test
+        system test unconfigure deletetest
+)
+
+deploy test 1

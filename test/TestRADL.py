@@ -331,5 +331,14 @@ net_interface.1.ip = '10.0.0.1'
 		r.check()
 		self.assertEqual(r.getPublicIP(), "10.0.0.1")
 
+	def test_unconfigure(self):
+		r = parse_radl(TESTS_PATH + "/test_radl_2.radl")
+		self.assertEqual(len(r.contextualize.get_contextualize_items_by_step()),1)
+		self.assertEqual(len(r.contextualize.get_contextualize_items_by_step(unconfigure=True)),1)
+		self.radl_check(r, [1, 1, 1, 2, 2])
+		radl_json = dump_radl_json(r)
+		r = parse_radl_json(radl_json)
+		self.radl_check(r, [1, 1, 1, 2, 2])
+
 if __name__ == "__main__":
 	unittest.main()

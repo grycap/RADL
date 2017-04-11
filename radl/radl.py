@@ -520,7 +520,7 @@ class Aspect:
 
 class contextualize_item:
 	"""Store a line under ``contextualize`` RADL keyword."""
-	def __init__(self, system_id, configure_id, num=0, ctxt_tool=None ,line=None):
+	def __init__(self, system_id, configure_id, num=0, ctxt_tool=None ,line=None, unconfigure=False):
 		self.system = system_id
 		"""System id."""
 		self.configure = configure_id
@@ -530,11 +530,15 @@ class contextualize_item:
 		self.ctxt_tool = ctxt_tool
 		"""Name of the Ctxt. tool (optional). Currently supported: 'Ansible' and 'cloud-init'. Default 'Ansible'."""
 		self.line = line
+		self.unconfigure = unconfigure
+		"""UnConfigure flag."""
 		
 	def __str__(self):
-		return "system %s configure %s %s %s" % (self.system, self.configure,
-															  "step " + str(self.num) if self.num else "",
-															  "with " + self.ctxt_tool if self.ctxt_tool else "")
+		return "system %s %s %s %s %s" % (self.system,
+                                                 "unconfigure" if self.unconfigure else "configure",
+                                                 self.configure,
+                                                 "step " + str(self.num) if self.num else "",
+                                                 "with " + self.ctxt_tool if self.ctxt_tool else "")
 
 	def getId(self):
 		"""Return an unique key for this element."""
@@ -605,15 +609,16 @@ class contextualize(Aspect, object):
 			for i in self.items.values():
 				i.check(radl)
 			
-	def get_contextualize_items_by_step(self, default=None):
+	def get_contextualize_items_by_step(self, default=None, unconfigure=False):
 		"""Get a dictionary of the contextualize_items grouped by the step or the default value"""
 		if self.items:
 			res = {}
 			for elem in self.items.values():
-				if elem.num in res:
-					res[elem.num].append(elem)
-				else:
-					res[elem.num] = [elem]
+				if elem.unconfigure == unconfigure:
+					if elem.num in res:
+						res[elem.num].append(elem)
+					else:
+						res[elem.num] = [elem]
 			return res
 		else:
 			return default
