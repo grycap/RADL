@@ -30,3 +30,4 @@ RADL 1.10
 
     * Enable to specify a port range in outports: 1:10/tcp.
     * New class outpots to store OutPorts data: now network.parseOutPorts returns list of outports objects.
+    * Fix error getting IP of system in case of two nets and first one does not have an ip assigned.
