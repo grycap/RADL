@@ -331,5 +331,42 @@ net_interface.1.ip = '10.0.0.1'
 		r.check()
 		self.assertEqual(r.getPublicIP(), "10.0.0.1")
 
+	def test_add(self):
+		str_radl1 = """
+network public ( outbound = 'yes')
+network private (  )
+system front (
+disk.0.image.url = 'one://some/id' and
+cpu.count >= 1 and
+net_interface.1.connection = 'private' and
+net_interface.0.dns_name = 'front' and
+memory.size >= 2048m and
+net_interface.0.connection = 'public'
+)
+
+system vnode-1 (
+)
+
+system vnode-2 (
+)
+
+deploy front 1 azure
+"""
+
+		radl1 = parse_radl(str_radl1)
+
+		str_radl2 = """
+system vnode-2 (
+)
+deploy vnode-2 1
+
+"""
+
+		radl2 = parse_radl(str_radl2)
+		
+		s = radl2.systems[0].clone()
+		radl1.add(s, "replace")
+		radl1.check()
+
 if __name__ == "__main__":
 	unittest.main()
