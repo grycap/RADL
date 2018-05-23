@@ -331,5 +331,190 @@ net_interface.1.ip = '10.0.0.1'
 		r.check()
 		self.assertEqual(r.getPublicIP(), "10.0.0.1")
 
+	def test_add(self):
+		str_radl1 = """
+network public ( outbound = 'yes' and
+outports = '22,8800,8899,10000,4500/udp,500/udp' )
+network private (  )
+system front (
+queue_system = 'nomad' and
+net_interface.1.dns_name = 'privfront' and
+cpu.arch = 'x86_64' and
+disk.0.image.url = 'azr://OpenLogic/CentOS/7.4/7.4.20180118' and
+disk.0.applications contains (name = 'ansible.modules.grycap.docker-registry') and
+disk.0.applications contains (name = 'ansible.modules.serlophug.haproxy') and
+disk.0.applications contains (name = 'ansible.modules.grycap.im') and
+disk.0.applications contains (name = 'ansible.modules.grycap.consul') and
+disk.0.applications contains (name = 'ansible.modules.grycap.clues,master') and
+disk.0.applications contains (name = 'ansible.modules.grycap.docker') and
+disk.0.applications contains (name = 'ansible.modules.grycap.nomad') and
+cpu.count >= 2 and
+net_interface.1.connection = 'private' and
+availability_zone = 'northeurope' and
+net_interface.0.dns_name = 'front' and
+instance_name = 'clusterfront' and
+memory.size >= 2048m and
+auth = 'username = quibim ; password = quibim%2018! ; type = InfrastructureManager ; id = im
+username = serlophug@angelquibim.onmicrosoft.com ; subscription_id = 68133ba0-77ae-4b5f-9a9c-6f80cf601ddf ; password = quibim%2018! ; type = Azure ; id = azure
+' and
+ec3_templates = 'nomad' and
+net_interface.0.connection = 'public' and
+disk.0.os.credentials.new.password = 'IM+Quibim18' and
+ec3_templates_cmd = 'centos7-azure quibim_nomad_v4' and
+disk.0.os.name = 'linux' and
+instance_tags = 'cliente=i3m,recurso=frontnomad' and
+disk.0.os.credentials.username = 'quibimhpc'
+)
+
+system wn (
+ec3_node_type = 'wn' and
+cpu.arch = 'x86_64' and
+disk.0.image.url = 'azr://OpenLogic/CentOS/7.4/7.4.20180118' and
+availability_zone = 'northeurope' and
+ec3_max_instances = 3 and
+disk.0.os.name = 'linux' and
+disk.0.applications contains (name = 'ansible.modules.grycap.docker') and
+disk.0.applications contains (name = 'ansible.modules.grycap.docker-registry') and
+disk.0.applications contains (name = 'ansible.modules.grycap.nomad') and
+instance_name = 'smallwn' and
+memory.size >= 512m and
+ec3_node_pattern = 'vnode-[1,2,3]' and
+net_interface.0.connection = 'private' and
+instance_tags = 'cliente=i3m,recurso=smallwn' and
+ec3_reuse_nodes = 'true' and
+ec3_node_queues_list = 'smalljobs' and
+disk.0.os.credentials.new.password = 'IM+Quibim18' and
+cpu.count >= 1 and
+disk.0.os.credentials.username = 'quibimhpc'
+)
+
+
+system largewn (
+ec3_node_type = 'wn' and
+cpu.arch = 'x86_64' and
+disk.0.image.url = 'azr://OpenLogic/CentOS/7.4/7.4.20180118' and
+availability_zone = 'northeurope' and
+ec3_max_instances = 3 and
+disk.0.os.name = 'linux' and
+disk.0.applications contains (name = 'ansible.modules.grycap.docker') and
+disk.0.applications contains (name = 'ansible.modules.grycap.docker-registry') and
+disk.0.applications contains (name = 'ansible.modules.grycap.nomad') and
+instance_name = 'largewn' and
+memory.size >= 1024m and
+ec3_node_pattern = 'vnode-[4,5,6]' and
+net_interface.0.connection = 'private' and
+instance_tags = 'cliente=i3m,recurso=largewn' and
+ec3_node_queues_list = 'largejobs' and
+disk.0.os.credentials.new.password = 'IM+Quibim18' and
+cpu.count >= 1 and
+disk.0.os.credentials.username = 'quibimhpc'
+)
+
+system vnode-1 (
+
+)
+
+system vnode-2 (
+
+)
+
+system vnode-3 (
+
+)
+
+system vnode-4 (
+
+)
+
+system vnode-5 (
+
+)
+
+system vnode-6 (
+
+)
+
+
+deploy front 1 azure
+"""
+
+		radl1 = parse_radl(str_radl1)
+
+		str_radl2 = """
+network public
+network private
+system vnode-4 (
+ec3_node_type = 'wn' and
+ec3_class = 'largewn' and
+cpu.arch = 'x86_64' and
+disk.0.image.url = 'azr://OpenLogic/CentOS/7.4/7.4.20180118' and
+availability_zone = 'northeurope' and
+ec3_max_instances = 3 and
+disk.0.os.name = 'linux' and
+disk.0.applications contains (name = 'ansible.modules.grycap.docker') and
+disk.0.applications contains (name = 'ansible.modules.grycap.docker-registry') and
+disk.0.applications contains (name = 'ansible.modules.grycap.nomad') and
+net_interface.0.dns_name = 'vnode-4' and
+instance_name = 'largewn' and
+memory.size >= 1024m and
+ec3_node_pattern = 'vnode-[4,5,6]' and
+net_interface.0.connection = 'private' and
+instance_tags = 'cliente=i3m,recurso=largewn' and
+ec3_node_queues_list = 'largejobs' and
+disk.0.os.credentials.new.password = 'IM+Quibim18' and
+cpu.count >= 1 and
+disk.0.os.credentials.username = 'quibimhpc'
+)
+
+configure vnode-4 (
+@begin
+
+- pre_tasks:
+  - include_vars: azure_files_vars.yml
+  - include_vars: nomad_wn_firewall_vars.yml
+  - include: nomad_firewall.yml
+  - include_vars: ec3_clues_common_vars.yml
+  - include_vars: docker_registry_vars.yml
+  - include_vars: nomad_common_vars.yml
+  - lineinfile:
+	  insertbefore: BOF
+	  line: '{{ docker_registry_ip }} {{ front_hostname }}'
+	  path: /etc/hosts
+	name: Add {{ front_hostname }} to /etc/hosts
+  roles:
+  - role: grycap.docker
+  - role: grycap.docker-registry
+  - role: grycap.nomad
+  vars:
+	client_enabled: true
+	client_group_name: allnowindows
+	client_node_class: largejobs
+	client_options:
+	  docker.privileged.enabled: true
+	  docker.volumes.enabled: true
+	  driver.raw_exec.enable: '1'
+	  driver.whitelist: docker,qemu,raw_exec,exec
+	consul_address: '{{ hostvars[ groups[''front''][0] ][''IM_NODE_PRIVATE_IP''] }}:8500'
+	name: '{{ IM_NODE_HOSTNAME }}'
+	server_enabled: false
+	use_client_options: true
+	use_consul: true
+
+
+
+
+
+@end
+)
+deploy vnode-4 1
+
+"""
+
+		radl2 = parse_radl(str_radl2)
+		
+		s = radl2.systems[0].clone()
+		radl1.add(s, "replace")
+		radl1.check()
+
 if __name__ == "__main__":
 	unittest.main()

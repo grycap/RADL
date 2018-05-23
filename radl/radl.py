@@ -1154,7 +1154,10 @@ class RADL:
 			if ifpresent == "error":
 				raise Exception("Aspect with the same id was found.")
 			elif ifpresent == "replace":
-				aspect_list.remove(old_aspect[0])
+				for i, elem in enumerate(aspect_list):
+					if elem.getId() == old_aspect[0].getId():
+						del aspect_list[i]
+						break
 				aspect_list.append(aspect)
 				return True
 			elif ifpresent == "ignore":
@@ -1233,6 +1236,15 @@ class RADL:
 		for i in [ f for fs in [self.networks, self.ansible_hosts, self.systems, self.deploys,
 									self.configures, [self.contextualize]] for f in fs ]:
 			i.check(self)
+
+		snames = [s.name for s in self.systems]
+		if len(set(snames)) != len(snames):
+			raise RADLParseException("Some System name duplicated.")
+
+		nids = [s.id for s in self.networks]
+		if len(set(nids)) != len(nids):
+			raise RADLParseException("Some Network name duplicated.")
+
 		return True
 
 	def get_system_by_name(self, name):
