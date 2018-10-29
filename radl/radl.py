@@ -648,7 +648,7 @@ class configure(Aspect):
 		except:
 			return True
 		try:
-			yaml.load(self.recipes)
+			yaml.safe_load(self.recipes)
 		except Exception as e:
 			raise RADLParseException("Invalid YAML code: %s." % e, line=self.line)
 		return True
