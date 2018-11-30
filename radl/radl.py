@@ -1023,7 +1023,7 @@ class system(Features, Aspect):
 			"disk": {
 				"image.url": ((str,unicode,list), system._check_disk_image_url),
 				"image.name": (str, None),
-				"type": (str, ["SWAP", "ISO", "FILESYSTEM"]),
+				"type": (str, None),
 				"device": (str, None),
 				"mount_path": (str, None),
 				"fstype": (str, None),
