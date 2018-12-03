@@ -15,5 +15,5 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-__all__ = ['radl_lex','radl_parse','radl_json','radl']
+__all__ = ['radl_parse','radl_json','radl']
 __version__ = '1.1.2'
