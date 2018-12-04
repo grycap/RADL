@@ -32,9 +32,7 @@ You must install them if you will install RADL from sources.
 It is also required to install the Python Lex & Yacc library (<http://www.dabeaz.com/ply/>).
 It is available in all of the main distributions as 'python-ply' package or 'ply' using pip.
 
-
 ### 1.2 INSTALLING
-
 
 #### 1.2.1 FROM PIP
 
