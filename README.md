@@ -1,4 +1,4 @@
-# Resource and Application Description Language (RADL) parser.
+# Resource and Application Description Language (RADL) parser
 
 *   Version ![PyPI](https://img.shields.io/pypi/v/radl.svg)
 *   PyPI ![PypI](https://img.shields.io/pypi/dm/RADL.svg)
