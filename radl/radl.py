@@ -1011,7 +1011,7 @@ class system(Features, Aspect):
             "image_type": (str, ["VMDK", "QCOW", "QCOW2", "RAW"]),
             "virtual_system_type": (str, system._check_virtual_system_type),
             "price": ((int, float), positive, None),
-            "cpu.count": (int, positive, None),
+            "cpu.count": ((int, float), positive, None),
             "cpu.arch": (str, ['I386', 'X86_64']),
             "cpu.performance": ((int, float), positive, ["ECU", "GCEU", "HRZ"]),
             "memory.size": (int, positive, mem_units),
