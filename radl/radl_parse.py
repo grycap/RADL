@@ -24,7 +24,7 @@ from .radl import Feature, RADL, system, network, ansible, configure, contextual
 
 class RADLParser:
 
-    def __init__(self, autodefinevars=True, **kwargs):
+    def __init__(self, **kwargs):
         self.lexer = lex.lex(module=self, debug=0, optimize=0, **kwargs)
         self.yacc = yacc.yacc(module=self, debug=0, optimize=0)
 
@@ -70,61 +70,75 @@ class RADLParser:
     t_body_ignore = ' \t'
 
     # Ignore comments.
-    def t_comment(self, t):
+    @staticmethod
+    def t_comment(t):
         r'\#.*'
         pass
 
-    def t_body_LE(self, t):
+    @staticmethod
+    def t_body_LE(t):
         r'<='
         return t
 
-    def t_body_GE(self, t):
+    @staticmethod
+    def t_body_GE(t):
         r'>='
         return t
 
-    def t_body_EQ(self, t):
+    @staticmethod
+    def t_body_EQ(t):
         r'='
         return t
 
-    def t_body_GT(self, t):
+    @staticmethod
+    def t_body_GT(t):
         r'>'
         return t
 
-    def t_body_LT(self, t):
+    @staticmethod
+    def t_body_LT(t):
         r'<'
         return t
 
-    def t_LPAREN(self, t):
+    @staticmethod
+    def t_LPAREN(t):
         r'\('
         t.lexer.push_state('body')
         return t
 
-    def t_RPAREN(self, t):
+    @staticmethod
+    def t_RPAREN(t):
         r'\)'
         t.lexer.pop_state()
         return t
 
-    def t_body_LBRACK(self, t):
+    @staticmethod
+    def t_body_LBRACK(t):
         r'\['
         return t
 
-    def t_body_RBRACK(self, t):
+    @staticmethod
+    def t_body_RBRACK(t):
         r'\]'
         return t
 
-    def t_body_COMMA(self, t):
+    @staticmethod
+    def t_body_COMMA(t):
         r'\,'
         return t
 
-    def t_newline(self, t):
+    @staticmethod
+    def t_newline(t):
         r'\n'
         t.lexer.lineno += len(t.value)
 
-    def t_body_newline(self, t):
+    @staticmethod
+    def t_body_newline(t):
         r'\n'
         t.lexer.lineno += len(t.value)
 
-    def t_NUMBER(self, t):
+    @staticmethod
+    def t_NUMBER(t):
         r'\d+\.?\d*'
         if t.value.find(".") != -1:
             t.value = float(t.value)
@@ -132,7 +146,8 @@ class RADLParser:
             t.value = int(t.value)
         return t
 
-    def t_STRING(self, t):
+    @staticmethod
+    def t_STRING(t):
         r"'([^\\']|\\.)*'"
         # t.value = t.value[1:-1].replace("\\'", "'")
         t.value = t.value[1:-1]
@@ -152,33 +167,39 @@ class RADLParser:
         'with': 'WITH'
     }
 
-    def t_VAR(self, t):
+    @staticmethod
+    def t_VAR(t):
         r'[a-zA-Z_.][\w\d_.-]*'
-        t.type = self.reserved.get(t.value, 'VAR')  # Check reserved words
+        t.type = RADLParser.reserved.get(t.value, 'VAR')  # Check reserved words
         return t
 
-    def t_RECIPE_BEGIN(self, t):
+    @staticmethod
+    def t_RECIPE_BEGIN(t):
         r'@begin'
         t.lexer.push_state('recipe')
         return t
 
-    def t_recipe_RECIPE_END(self, t):
+    @staticmethod
+    def t_recipe_RECIPE_END(t):
         r'@end'
         t.lexer.pop_state()
         return t
 
-    def t_recipe_RECIPE_LINE(self, t):
+    @staticmethod
+    def t_recipe_RECIPE_LINE(t):
         r'.*\n'
         t.type = 'RECIPE_LINE'
         t.lexer.lineno += t.value.count("\n")
         return t
 
     # Error handling rule
-    def t_ANY_error(self, t):
+    @staticmethod
+    def t_ANY_error(t):
         # print "Illegal character '%s'" % t.value[0]
         t.lexer.skip(1)
 
-    def p_radl(self, t):
+    @staticmethod
+    def p_radl(t):
         """radl : radl radl_sentence
                 | radl_sentence"""
 
@@ -189,7 +210,8 @@ class RADLParser:
             t[0] = t[1]
             t[0].add(t[2])
 
-    def p_radl_sentence(self, t):
+    @staticmethod
+    def p_radl_sentence(t):
         """radl_sentence : network_sentence
                          | ansible_sentence
                          | system_sentence
@@ -198,7 +220,8 @@ class RADLParser:
                          | deploy_sentence"""
         t[0] = t[1]
 
-    def p_configure_sentence(self, t):
+    @staticmethod
+    def p_configure_sentence(t):
         """configure_sentence : CONFIGURE VAR
                               | CONFIGURE VAR LPAREN RECIPE_BEGIN recipe RECIPE_END RPAREN"""
 
@@ -207,7 +230,8 @@ class RADLParser:
         else:
             t[0] = configure(t[2], t[5], line=t.lineno(1))
 
-    def p_recipe(self, t):
+    @staticmethod
+    def p_recipe(t):
         """recipe : RECIPE_LINE
                   | RECIPE_LINE recipe"""
         if len(t) == 3:
@@ -215,7 +239,8 @@ class RADLParser:
         else:
             t[0] = t[1]
 
-    def p_deploy_sentence(self, t):
+    @staticmethod
+    def p_deploy_sentence(t):
         """deploy_sentence : DEPLOY VAR NUMBER
                            | DEPLOY VAR NUMBER VAR"""
 
@@ -224,7 +249,8 @@ class RADLParser:
         else:
             t[0] = deploy(t[2], t[3], t[4], line=t.lineno(1))
 
-    def p_contextualize_sentence(self, t):
+    @staticmethod
+    def p_contextualize_sentence(t):
         """contextualize_sentence : CONTEXTUALIZE LPAREN contextualize_items RPAREN
                                   | CONTEXTUALIZE NUMBER LPAREN contextualize_items RPAREN"""
 
@@ -233,7 +259,8 @@ class RADLParser:
         else:
             t[0] = contextualize(t[4], t[2], line=t.lineno(1))
 
-    def p_contextualize_items(self, t):
+    @staticmethod
+    def p_contextualize_items(t):
         """contextualize_items : contextualize_items contextualize_item
                                | contextualize_item
                                | empty"""
@@ -245,7 +272,8 @@ class RADLParser:
         else:
             t[0] = []
 
-    def p_contextualize_item(self, t):
+    @staticmethod
+    def p_contextualize_item(t):
         """contextualize_item : SYSTEM VAR CONFIGURE VAR
                               | SYSTEM VAR CONFIGURE VAR STEP NUMBER
                               | SYSTEM VAR CONFIGURE VAR WITH VAR"""
@@ -257,7 +285,8 @@ class RADLParser:
         else:
             t[0] = contextualize_item(t[2], t[4], num=t[6], line=t.lineno(1))
 
-    def p_network_sentence(self, t):
+    @staticmethod
+    def p_network_sentence(t):
         """network_sentence : NETWORK VAR
                             | NETWORK VAR LPAREN features RPAREN"""
 
@@ -266,12 +295,14 @@ class RADLParser:
         else:
             t[0] = network(t[2], t[4], line=t.lineno(1))
 
-    def p_ansible_sentence(self, t):
+    @staticmethod
+    def p_ansible_sentence(t):
         """ansible_sentence : ANSIBLE VAR LPAREN features RPAREN"""
 
         t[0] = ansible(t[2], t[4], line=t.lineno(1))
 
-    def p_system_sentence(self, t):
+    @staticmethod
+    def p_system_sentence(t):
         """system_sentence : SYSTEM VAR
                            | SYSTEM VAR LPAREN features RPAREN"""
 
@@ -280,7 +311,8 @@ class RADLParser:
         else:
             t[0] = system(t[2], t[4], line=t.lineno(1))
 
-    def p_features(self, t):
+    @staticmethod
+    def p_features(t):
         """features : features AND feature
                     | feature
                     | empty"""
@@ -293,19 +325,22 @@ class RADLParser:
         else:
             t[0] = []
 
-    def p_feature(self, t):
+    @staticmethod
+    def p_feature(t):
         """feature : feature_soft
                    | feature_simple
                    | feature_contains"""
 
         t[0] = t[1]
 
-    def p_feature_soft(self, t):
+    @staticmethod
+    def p_feature_soft(t):
         """feature_soft : SOFT NUMBER LPAREN features RPAREN"""
 
         t[0] = SoftFeatures(t[2], t[4], line=t.lineno(1))
 
-    def p_feature_simple(self, t):
+    @staticmethod
+    def p_feature_simple(t):
         """feature_simple : VAR comparator NUMBER VAR
                           | VAR comparator NUMBER
                           | VAR comparator LBRACK string_list RBRACK
@@ -318,12 +353,14 @@ class RADLParser:
         elif len(t) == 4:
             t[0] = Feature(t[1], t[2], t[3], line=t.lineno(1))
 
-    def p_empty(self, t):
+    @staticmethod
+    def p_empty(t):
         """empty :"""
 
         t[0] = None
 
-    def p_comparator(self, t):
+    @staticmethod
+    def p_comparator(t):
         """comparator : EQ
                       | LT
                       | GT
@@ -332,12 +369,14 @@ class RADLParser:
 
         t[0] = t[1]
 
-    def p_feature_contains(self, t):
+    @staticmethod
+    def p_feature_contains(t):
         """feature_contains : VAR CONTAINS LPAREN features RPAREN"""
 
         t[0] = Feature(t[1], t[2], Features(t[4]), line=t.lineno(1))
 
-    def p_string_list(self, t):
+    @staticmethod
+    def p_string_list(t):
         """string_list : string_list COMMA STRING
                        | STRING
                        | empty"""
@@ -350,7 +389,8 @@ class RADLParser:
         else:
             t[0] = []
 
-    def p_error(self, t):
+    @staticmethod
+    def p_error(t):
         raise RADLParseException("Parse error in: " + str(t), line=t.lineno if t else None)
 
     def parse(self, data):
