@@ -1,7 +1,7 @@
 # Resource and Application Description Language (RADL) parser
 
 [![PyPI](https://img.shields.io/pypi/v/radl.svg)](https://pypi.org/project/radl)
-[![Build Status](https://jenkins.i3m.upv.es/buildStatus/icon?job=grycap/radl-parser)](https://jenkins.i3m.upv.es/job/grycap/job/radl-parser/)
+[![Build Status](http://jenkins.i3m.upv.es/buildStatus/icon?job=grycap/radl-parser)](https://jenkins.i3m.upv.es/job/grycap/job/radl-parser/)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/9f9c0257b8b84a6daff76fbe09a9ce18)](https://www.codacy.com/app/micafer/radl)
 [![Codacy Badge](https://api.codacy.com/project/badge/Coverage/9f9c0257b8b84a6daff76fbe09a9ce18)](https://www.codacy.com/app/micafer/radl)
 [![License](https://img.shields.io/badge/license-GPL%20v3.0-brightgreen.svg)](LICENSE)
