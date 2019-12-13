@@ -1,8 +1,10 @@
 # Resource and Application Description Language (RADL) parser
 
-*   Version ![PyPI](https://img.shields.io/pypi/v/radl.svg)
-*   PyPI ![PypI](https://img.shields.io/pypi/dm/RADL.svg)
-*   Build [![Build Status](http://jenkins.i3m.upv.es/buildStatus/icon?job=grycap/radl-parser)](http://jenkins.i3m.upv.es/job/grycap/job/radl-parser/)
+[![PyPI](https://img.shields.io/pypi/v/radl.svg)](https://pypi.org/project/radl)
+[![Build Status](https://jenkins.i3m.upv.es/buildStatus/icon?job=grycap/radl-parser)](https://jenkins.i3m.upv.es/job/grycap/job/radl-parser/)
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/9f9c0257b8b84a6daff76fbe09a9ce18)](https://www.codacy.com/app/micafer/radl)
+[![Codacy Badge](https://api.codacy.com/project/badge/Coverage/9f9c0257b8b84a6daff76fbe09a9ce18)](https://www.codacy.com/app/micafer/radl)
+[![License](https://img.shields.io/badge/license-GPL%20v3.0-brightgreen.svg)](LICENSE)
 
 The main purpose of the Resource and Application description Language (RADL) is to specify 
 the requirements of the scientific applications needed to be deployed in a virtualized 
