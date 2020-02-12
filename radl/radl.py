@@ -1010,10 +1010,10 @@ class system(Features, Aspect):
             "spot": (str, ["YES", "NO"]),
             "image_type": (str, ["VMDK", "QCOW", "QCOW2", "RAW"]),
             "virtual_system_type": (str, system._check_virtual_system_type),
-            "price": ((int, float), positive, None),
-            "cpu.count": ((int, float), positive, None),
+            "price": (float, positive, None),
+            "cpu.count": (float, positive, None),
             "cpu.arch": (str, ['I386', 'X86_64']),
-            "cpu.performance": ((int, float), positive, ["ECU", "GCEU", "HRZ"]),
+            "cpu.performance": (float, positive, ["ECU", "GCEU", "HRZ"]),
             "memory.size": (int, positive, mem_units),
             "disk.0.os.credentials.new.password": (str, check_password),
             "ansible_host": (str, check_ansible_host),
@@ -1155,7 +1155,7 @@ class RADL:
         Return(bool): True if aspect was added.
         """
 
-        # If aspect is a contextualization, it is trated separately
+        # If aspect is a contextualization, it is treated separately
         if isinstance(aspect, contextualize):
             self.contextualize.update(aspect)
             return True
