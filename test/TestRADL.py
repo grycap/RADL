@@ -367,6 +367,31 @@ deploy vnode-2 1
         radl1.add(s, "replace")
         radl1.check()
 
+    def test_contextualize_options(self):
+        radl = """
+            system test (
+            cpu.count>=1
+            )
+
+            deploy test 1
+
+            contextualize (
+                option ansible_version <= '2.6.20'
+            )
+            """
+        r = parse_radl(radl)
+        r.check()
+        self.assertEqual(len(r.contextualize.options), 1)
+        self.assertEqual(r.contextualize.options['ansible_version'].getValue(), '2.6.20')
+        self.assertEqual(r.contextualize.options['ansible_version'].getLogOperator(), '<=')
+
+        radl_json = dump_radl_json(r)
+        print(radl_json)
+        r = parse_radl_json(radl_json)
+        r.check()
+        self.assertEqual(len(r.contextualize.options), 1)
+        self.assertEqual(r.contextualize.options['ansible_version'].getValue(), '2.6.20')
+
 
 if __name__ == "__main__":
     unittest.main()

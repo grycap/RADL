@@ -99,7 +99,8 @@ def p_configure(a):
 def p_contextualize(a):
     assert a["class"] == "contextualize"
     return contextualize([p_contextualize_item(i) for i in a.get("items", [])],
-                         max_time=a.get("max_time", 0))
+                         max_time=a.get("max_time", 0),
+                         options=p_features(a.get("options", {})))
 
 
 def p_contextualize_item(a):
@@ -169,7 +170,7 @@ def radlToSimple(radl_data):
 
     aspects = (radl_data.ansible_hosts + radl_data.networks + radl_data.systems +
                radl_data.configures + radl_data.deploys)
-    if radl_data.contextualize.items is not None:
+    if radl_data.contextualize.items is not None or radl_data.contextualize.options is not None:
         aspects.append(radl_data.contextualize)
     return [aspectToSimple(a) for a in aspects]
 
@@ -201,6 +202,9 @@ def contextualizeToSimple(a):
         r["max_time"] = a.max_time
     if a.items:
         r["items"] = [contextualizeItemToSimple(i) for i in a.items.values()]
+    if a.options:
+        r["options"] = featuresToSimple(Features(a.options.values()))
+
     return r
 
 
