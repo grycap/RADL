@@ -61,7 +61,8 @@ class RADLParser:
         'RECIPE_END',
         'CONTEXTUALIZE',
         'STEP',
-        'WITH'
+        'WITH',
+        'OPTION'
     )
 
     # A string containing ignored characters (spaces and tabs)
@@ -164,7 +165,8 @@ class RADLParser:
         'configure': 'CONFIGURE',
         'contextualize': 'CONTEXTUALIZE',
         'step': 'STEP',
-        'with': 'WITH'
+        'with': 'WITH',
+        'option': 'OPTION'
     }
 
     @staticmethod
@@ -251,13 +253,33 @@ class RADLParser:
 
     @staticmethod
     def p_contextualize_sentence(t):
-        """contextualize_sentence : CONTEXTUALIZE LPAREN contextualize_items RPAREN
-                                  | CONTEXTUALIZE NUMBER LPAREN contextualize_items RPAREN"""
+        """contextualize_sentence : CONTEXTUALIZE LPAREN contextualize_options contextualize_items RPAREN
+                                  | CONTEXTUALIZE NUMBER LPAREN contextualize_options contextualize_items RPAREN"""
 
-        if len(t) == 5:
-            t[0] = contextualize(t[3], line=t.lineno(1))
+        if len(t) == 6:
+            t[0] = contextualize(t[4], options=t[3], line=t.lineno(1))
         else:
-            t[0] = contextualize(t[4], t[2], line=t.lineno(1))
+            t[0] = contextualize(t[5], t[2], options=t[4], line=t.lineno(1))
+
+    @staticmethod
+    def p_contextualize_options(t):
+        """contextualize_options : contextualize_options contextualize_option
+                                 | contextualize_option
+                                 | empty"""
+        if len(t) == 3:
+            t[0] = t[1]
+            t[0].append(t[2])
+        elif t[1]:
+            t[0] = [t[1]]
+        else:
+            t[0] = []
+
+    @staticmethod
+    def p_contextualize_option(t):
+        """contextualize_option : OPTION VAR comparator STRING
+                                | OPTION VAR comparator NUMBER"""
+
+        t[0] = Feature(t[2], t[3], t[4], line=t.lineno(1))
 
     @staticmethod
     def p_contextualize_items(t):

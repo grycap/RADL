@@ -278,7 +278,7 @@ class Features(object):
         elif f.prop not in self.props and missing in ["ignore", "first"]:
             return
 
-        if isinstance(f.value, int) or isinstance(f.value, float):
+        if isinstance(f.value, (int, float)):
             if f.operator == "=":
                 inter1 = (f, f)
             elif f.operator[0] == "<":
@@ -571,27 +571,39 @@ class contextualize_item:
 
 class contextualize(Aspect, object):
     """Store a ``contextualize`` RADL keyword."""
-    def __init__(self, items=None, max_time=0, line=None):
+    def __init__(self, items=None, max_time=0, options=None, line=None):
         self.max_time = max_time
         """Maximum time."""
         self.items = None
         """List of contextualize_item."""
+        self.options = None
+        """"List of contextualization options"""
         if isinstance(items, list):
             self.items = dict([(c.getId(), c) for c in items])
         elif isinstance(items, dict):
             self.items = items
         elif items is not None:
             raise ValueError("Unexpected type for 'items'.")
+
+        if isinstance(options, list):
+            self.options = dict([(o.prop, o) for o in options])
+        elif isinstance(options, dict):
+            self.options = options
+        elif options is not None:
+            raise ValueError("Unexpected type for 'options'.")
+
         self.line = line
 
     def __str__(self):
-        if self.items is None:
+        if self.items is None and self.options is None:
             return ""
-        elif not self.items:
+        elif not self.items and not self.options:
             return "contextualize ()"
         else:
-            return "contextualize %s (\n%s\n)" % (self.max_time if self.max_time else "",
-                                                  "\n".join([str(i) for i in self.items.values()]))
+            return "contextualize %s (\n%s%s%s\n)" % (self.max_time if self.max_time else "",
+                                                      "\n".join(["option %s" % i for i in self.options.values()]),
+                                                      "\n" if self.options else "",
+                                                      "\n".join([str(i) for i in self.items.values()]))
 
     def __len__(self):
         if self.items is None:
@@ -608,6 +620,11 @@ class contextualize(Aspect, object):
                 self.items = cont.items
             else:
                 self.items.update(cont.items)
+        if cont.options is not None:
+            if self.options is None:
+                self.options = cont.options
+            else:
+                self.options.update(cont.options)
 
     def check(self, radl):
         """Check a contextualize."""
