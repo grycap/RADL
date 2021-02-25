@@ -16,4 +16,4 @@
 
 
 __all__ = ['radl_parse', 'radl_json', 'radl']
-__version__ = '1.1.4'
+__version__ = '1.1.5'
