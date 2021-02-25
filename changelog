@@ -49,3 +49,7 @@ RADL 1.14
 
     * Enable to specify an ansible version to install per infrastructure
     * Error validating types 
+
+RADL 1.15
+
+    * Fix error with no options
