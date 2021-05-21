@@ -40,3 +40,16 @@ RADL 1.12
 
     * Avoid restrictions in disk.*.type enhancement.
     * Minor security change.
+
+RADL 1.13
+
+    * Enable to set float values as cpu.count
+
+RADL 1.14
+
+    * Enable to specify an ansible version to install per infrastructure
+    * Error validating types 
+
+RADL 1.15
+
+    * Fix error with no options

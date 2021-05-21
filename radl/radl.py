@@ -600,10 +600,13 @@ class contextualize(Aspect, object):
         elif not self.items and not self.options:
             return "contextualize ()"
         else:
-            return "contextualize %s (\n%s%s%s\n)" % (self.max_time if self.max_time else "",
-                                                      "\n".join(["option %s" % i for i in self.options.values()]),
-                                                      "\n" if self.options else "",
-                                                      "\n".join([str(i) for i in self.items.values()]))
+            options = ""
+            if self.options:
+                options = "\n".join(["option %s" % i for i in self.options.values()]) + "\n"
+            items = ""
+            if self.items:
+                items = "\n".join([str(i) for i in self.items.values()])
+            return "contextualize %s (\n%s%s\n)" % (self.max_time if self.max_time else "", options, items)
 
     def __len__(self):
         if self.items is None:
