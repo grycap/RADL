@@ -386,11 +386,30 @@ deploy vnode-2 1
         self.assertEqual(r.contextualize.options['ansible_version'].getLogOperator(), '<=')
 
         radl_json = dump_radl_json(r)
-        print(radl_json)
         r = parse_radl_json(radl_json)
         r.check()
         self.assertEqual(len(r.contextualize.options), 1)
         self.assertEqual(r.contextualize.options['ansible_version'].getValue(), '2.6.20')
+
+    def test_description(self):
+        radl = """
+            description inf_name (
+                content = 'some_desc'
+            )
+            system test (
+            cpu.count>=1
+            )
+            """
+        r = parse_radl(radl)
+        r.check()
+        self.assertEqual(r.description.id, 'inf_name')
+        self.assertEqual(r.description.getValue("content"), 'some_desc')
+
+        radl_json = dump_radl_json(r)
+        r = parse_radl_json(radl_json)
+        r.check()
+        self.assertEqual(r.description.id, 'inf_name')
+        self.assertEqual(r.description.getValue("content"), 'some_desc')
 
 
 if __name__ == "__main__":

@@ -19,7 +19,7 @@ import ply.yacc as yacc
 
 import os
 from .radl import Feature, RADL, system, network, ansible, configure, contextualize, contextualize_item, \
-    deploy, SoftFeatures, Features, RADLParseException
+    deploy, SoftFeatures, Features, RADLParseException, description
 
 
 class RADLParser:
@@ -62,7 +62,8 @@ class RADLParser:
         'CONTEXTUALIZE',
         'STEP',
         'WITH',
-        'OPTION'
+        'OPTION',
+        'DESCRIPTION'
     )
 
     # A string containing ignored characters (spaces and tabs)
@@ -166,7 +167,8 @@ class RADLParser:
         'contextualize': 'CONTEXTUALIZE',
         'step': 'STEP',
         'with': 'WITH',
-        'option': 'OPTION'
+        'option': 'OPTION',
+        'description': 'DESCRIPTION'
     }
 
     @staticmethod
@@ -214,13 +216,20 @@ class RADLParser:
 
     @staticmethod
     def p_radl_sentence(t):
-        """radl_sentence : network_sentence
+        """radl_sentence : description_sentence
+                         | network_sentence
                          | ansible_sentence
                          | system_sentence
                          | configure_sentence
                          | contextualize_sentence
                          | deploy_sentence"""
         t[0] = t[1]
+
+    @staticmethod
+    def p_description_sentence(t):
+        """description_sentence : DESCRIPTION VAR LPAREN features RPAREN"""
+
+        t[0] = description(t[2], t[4], line=t.lineno(1))
 
     @staticmethod
     def p_configure_sentence(t):

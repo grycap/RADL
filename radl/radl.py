@@ -1152,10 +1152,13 @@ class RADL:
         """List of configure."""
         self.contextualize = contextualize()
         """List of contextualize."""
+        self.description = None
+        """Infrastructure name and more description data."""
 
     def __str__(self):
-        return "\n".join([str(f) for fs in [self.ansible_hosts, self.networks, self.systems, self.configures,
-                                            [self.contextualize], self.deploys] for f in fs])
+        return "\n".join([str(f) for fs in [self.ansible_hosts, self.networks, self.systems,
+                                            self.configures, [self.contextualize], self.deploys,
+                                            [self.description] if self.description else []] for f in fs])
 
     def add(self, aspect, ifpresent="error"):
         """
@@ -1176,6 +1179,13 @@ class RADL:
         if isinstance(aspect, contextualize):
             self.contextualize.update(aspect)
             return True
+
+        if isinstance(aspect, description):
+            if self.description:
+                raise Exception("description cannot be modified.")
+            else:
+                self.description = aspect
+                return True
 
         classification = [(network, self.networks), (system, self.systems), (ansible, self.ansible_hosts),
                           (deploy, self.deploys), (configure, self.configures)]
@@ -1478,3 +1488,20 @@ class outport():
 
                 res.append(outport(remote_port, local_port, local_protocol))
         return res
+
+
+class description(Features, Aspect):
+    """Store a RADL ``description``."""
+
+    def __init__(self, name, features=None, line=None):
+        self.id = name
+        """Infrastructure name."""
+        Features.__init__(self, features)
+        self.line = line
+        self.reference = False
+
+    def getId(self):
+        return self.id
+
+    def __str__(self):
+        return "description %s %s" % (self.id, "( %s )" % Features.__str__(self))
