@@ -1159,9 +1159,9 @@ class RADL:
         """Infrastructure name and more description data."""
 
     def __str__(self):
-        return "\n".join([str(f) for fs in [self.ansible_hosts, self.networks, self.systems,
-                                            self.configures, [self.contextualize], self.deploys,
-                                            [self.description] if self.description else []] for f in fs])
+        return "\n".join([str(f) for fs in [[self.description] if self.description else [],
+                                            self.ansible_hosts, self.networks, self.systems,
+                                            self.configures, [self.contextualize], self.deploys] for f in fs])
 
     def add(self, aspect, ifpresent="error"):
         """
