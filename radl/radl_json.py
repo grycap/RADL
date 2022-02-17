@@ -189,7 +189,7 @@ def aspectToSimple(a):
 
 def configureToSimple(a):
     assert isinstance(a, configure)
-    if a.reference or not a.recipes:
+    if a.reference:
         return {"class": "configure", "id": a.name, "reference": True}
     else:
         return {"class": "configure", "id": a.name, "recipes": a.recipes}

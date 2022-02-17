@@ -406,6 +406,11 @@ deploy vnode-2 1
         r.check()
         self.assertEqual(r.configures[0].recipes, None)
 
+        radl_json = dump_radl_json(r)
+        print(radl_json)
+        r = parse_radl_json(radl_json)
+        r.check()
+        self.assertEqual(r.configures[0].recipes, None)
 
 if __name__ == "__main__":
     unittest.main()
