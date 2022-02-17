@@ -657,8 +657,10 @@ class configure(Aspect):
     """Store a RADL ``configure``."""
 
     def __init__(self, name, recipe="", reference=False, line=None):
-        # encode the recipe to enable to set special chars in the recipes
-        self.recipes = str(recipe.encode('utf-8', 'ignore').decode())
+        self.recipes = None
+        if recipe is not None:
+            # encode the recipe to enable to set special chars in the recipes
+            self.recipes = str(recipe.encode('utf-8', 'ignore').decode())
         """Recipe content."""
         self.name = name
         """Configure id."""
@@ -670,13 +672,16 @@ class configure(Aspect):
         return self.name
 
     def __str__(self):
-        if self.reference or not self.recipes:
+        if self.reference:
             return "configure %s" % self.name
+        if self.recipes is None:
+            return "configure %s ()" % self.name
         return "configure %s (\n@begin\n%s\n@end\n)" % (self.name, self.recipes)
 
     def check(self, _):
         """Check this configure."""
-
+        if self.recipes is None:
+            return True
         try:
             import yaml
         except:
