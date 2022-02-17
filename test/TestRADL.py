@@ -392,6 +392,20 @@ deploy vnode-2 1
         self.assertEqual(len(r.contextualize.options), 1)
         self.assertEqual(r.contextualize.options['ansible_version'].getValue(), '2.6.20')
 
+    def test_empty_configure(self):
+        radl = """
+            system test (
+            cpu.count>=1
+            )
+
+            configure test ()
+
+            deploy test 1
+            """
+        r = parse_radl(radl)
+        r.check()
+        self.assertEqual(r.configures[0].recipes, None)
+
 
 if __name__ == "__main__":
     unittest.main()
