@@ -412,5 +412,22 @@ deploy vnode-2 1
         r.check()
         self.assertEqual(r.configures[0].recipes, None)
 
+    def test_escape_quote(self):
+        radl = """
+            system test (
+                some_value = 'some \\\' some'
+            )
+            """
+        r = parse_radl(radl)
+        r.check()
+        self.assertEqual(r.systems[0].getValue("some_value"), "some ' some")
+
+        radl_json = dump_radl_json(r)
+        print(radl_json)
+        r = parse_radl_json(radl_json)
+        r.check()
+        self.assertEqual(r.systems[0].getValue("some_value"), "some ' some")
+
+
 if __name__ == "__main__":
     unittest.main()
