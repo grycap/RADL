@@ -1396,11 +1396,11 @@ class ansible(Features, Aspect):
 class outport():
     """Store OutPorts data"""
 
-    def __init__(self, port_init, port_end, protocol, range=False, source_net=None):
+    def __init__(self, port_init, port_end, protocol, is_range=False, source_net=None):
         self.port_init = int(port_init)
         self.port_end = int(port_end)
         self.protocol = protocol
-        self.range = range
+        self.range = is_range
         self.source_net = source_net
 
     def __eq__(self, other):
