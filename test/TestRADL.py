@@ -38,8 +38,8 @@ class TestRADL(unittest.TestCase):
         self.assertIsInstance(radl, RADL)
         radl.check()
         if expected_lengths:
-            lengths = [len(l) for l in [radl.networks, radl.systems, radl.deploys,
-                                        radl.configures, radl.contextualize]]
+            lengths = [len(elem) for elem in [radl.networks, radl.systems, radl.deploys,
+                                              radl.configures, radl.contextualize]]
             self.assertEqual(lengths, expected_lengths)
         if check_output:
             self.radl_check(parse_radl(str(radl)), expected_lengths, check_output=False)
@@ -184,7 +184,7 @@ net_interface.0.connection = 'publica'
             self.radl_check(r)
 
         radl = """
-network publica (outbound = 'yes' and outports='8899-8899,22-22,1:10')
+network publica (outbound = 'yes' and outports='8899-8899,22-22,1:10,10.0.1.0/24-22')
 
 system main (
 net_interface.0.connection = 'publica'
@@ -192,7 +192,8 @@ net_interface.0.connection = 'publica'
         r = parse_radl(radl)
         r.check()
         net = r.get_network_by_id('publica')
-        expected_res = [outport(8899, 8899, 'tcp'), outport(22, 22, 'tcp'), outport(1, 10, 'tcp', True)]
+        expected_res = [outport(8899, 8899, 'tcp'), outport(22, 22, 'tcp'),
+                        outport(1, 10, 'tcp', True), outport(22, 22, 'tcp', False, '10.0.1.0/24')]
         self.assertEqual(net.getOutPorts(), expected_res)
 
     def test_check_password(self):

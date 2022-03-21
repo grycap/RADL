@@ -53,3 +53,11 @@ RADL 1.14
 RADL 1.15
 
     * Fix error with no options
+
+RADL 1.16
+
+    * Enable to define an empty configure
+
+RADL 1.20
+
+    * Add source subnet definition in outports
