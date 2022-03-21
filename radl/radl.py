@@ -1396,12 +1396,12 @@ class ansible(Features, Aspect):
 class outport():
     """Store OutPorts data"""
 
-    def __init__(self, port_init, port_end, protocol, is_range=False, source_net=None):
+    def __init__(self, port_init, port_end, protocol, is_range=False, remote_cidr=None):
         self.port_init = int(port_init)
         self.port_end = int(port_end)
         self.protocol = protocol
         self.range = is_range
-        self.source_net = source_net
+        self.remote_cidr = remote_cidr
 
     def __eq__(self, other):
         return (self.port_init == other.port_init and self.port_end == other.port_end and
@@ -1412,8 +1412,8 @@ class outport():
             res = "%d:%d/%s" % (self.port_init, self.port_end, self.protocol)
         else:
             res = "%d-%d/%s" % (self.port_init, self.port_end, self.protocol)
-        if self.source_net:
-            res = "%s-%s" % (self.source_net, res)
+        if self.remote_cidr:
+            res = "%s-%s" % (self.remote_cidr, res)
         return res
 
     def is_range(self):
@@ -1434,9 +1434,9 @@ class outport():
     def get_protocol(self):
         return self.protocol
 
-    def get_source_net(self):
-        if self.source_net:
-            return self.source_net
+    def get_remote_cidr(self):
+        if self.remote_cidr:
+            return self.remote_cidr
         else:
             return '0.0.0.0/0'
 
