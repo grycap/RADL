@@ -1435,7 +1435,10 @@ class outport():
         return self.protocol
 
     def get_source_net(self):
-        return self.source_net
+        if self.source_net:
+            return self.source_net
+        else:
+            return '0.0.0.0/0'
 
     @staticmethod
     def parseOutPorts(outports):
