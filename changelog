@@ -60,4 +60,4 @@ RADL 1.16
 
 RADL 1.20
 
-    * Add source subnet definition in outports
+    * Add remote cidr definition in outports
