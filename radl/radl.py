@@ -15,11 +15,12 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import copy
+import re
 from distutils.version import LooseVersion
 
 try:
     unicode
-except:
+except Exception:
     unicode = bytes
 
 
@@ -76,7 +77,7 @@ def check_outports_format(outports, _):
     """
     try:
         outport.parseOutPorts(outports.getValue())
-    except:
+    except Exception:
         return False
     else:
         return True
@@ -375,7 +376,7 @@ class Features(object):
 
         try:
             del self.props[prop]
-        except:
+        except Exception:
             pass
 
     @staticmethod
@@ -499,7 +500,7 @@ class Features(object):
             (num, sep, suffix) = tail.partition(".")
             try:
                 num = int(num)
-            except:
+            except Exception:
                 raise RADLParseException(
                     "Invalid property name; expected an index.", line=f.line)
             if not sep or suffix not in checks0:
@@ -684,7 +685,7 @@ class configure(Aspect):
             return True
         try:
             import yaml
-        except:
+        except Exception:
             return True
         try:
             yaml.safe_load(self.recipes)
@@ -1118,7 +1119,7 @@ class system(Features, Aspect):
             try:
                 new_system.applyFeatures(f, missing="other")
                 score += f.soft
-            except:
+            except Exception:
                 pass
         new_system.delValue(SoftFeatures.SOFT)
         return new_system, score
@@ -1395,11 +1396,12 @@ class ansible(Features, Aspect):
 class outport():
     """Store OutPorts data"""
 
-    def __init__(self, port_init, port_end, protocol, range=False):
+    def __init__(self, port_init, port_end, protocol, is_range=False, source_net=None):
         self.port_init = int(port_init)
         self.port_end = int(port_end)
         self.protocol = protocol
-        self.range = range
+        self.range = is_range
+        self.source_net = source_net
 
     def __eq__(self, other):
         return (self.port_init == other.port_init and self.port_end == other.port_end and
@@ -1407,9 +1409,12 @@ class outport():
 
     def __str__(self):
         if self.is_range:
-            return "%d:%d/%s" % (self.port_init, self.port_end, self.protocol)
+            res = "%d:%d/%s" % (self.port_init, self.port_end, self.protocol)
         else:
-            return "%d-%d/%s" % (self.port_init, self.port_end, self.protocol)
+            res = "%d-%d/%s" % (self.port_init, self.port_end, self.protocol)
+        if self.source_net:
+            res = "%s-%s" % (self.source_net, res)
+        return res
 
     def is_range(self):
         return self.range
@@ -1429,13 +1434,18 @@ class outport():
     def get_protocol(self):
         return self.protocol
 
+    def get_source_net(self):
+        return self.source_net
+
     @staticmethod
     def parseOutPorts(outports):
         """
         Parse the outports string
         Valid formats:
+        0.0.0.0/0-8899/tcp-8899/tcp
         8899/tcp-8899/tcp,22/tcp-22/tcp
         8899/tcp-8899,22/tcp-22
+        0.0.0.0/0-8899-8899,22-22
         8899-8899,22-22
         8899/tcp,22/udp
         8899,22
@@ -1446,43 +1456,29 @@ class outport():
         res = []
         ports = outports.split(',')
         for port in ports:
-            if port.find('-') != -1 and port.find(':') != -1:
-                raise RADLParseException('Port range (:) and port mapping (-) cannot be combined.')
-            if port.find(':') != -1:
-                parts = port.split(':')
-                range_init = parts[0]
-                range_end = parts[1]
-                range_end_parts = range_end.split("/")
-                if len(range_end_parts) > 1:
-                    protocol = range_end_parts[1]
-                    range_end = range_end_parts[0]
-                else:
-                    protocol = "tcp"
-                res.append(outport(range_init, range_end, protocol, True))
-            else:
-                parts = port.split('-')
-                remote_port = parts[0]
-                if len(parts) > 1:
-                    local_port = parts[1]
-                else:
-                    local_port = remote_port
+            expr = ("^((\d{1,3}.\d{1,3}.\d{1,3}.\d{1,3}\/\d{1,2})-){0,1}((\d+)((:)\d+){0,1}((\/tcp|\/udp){0,1}))"
+                    "((-)((\d+)((:)\d+){0,1}((\/tcp|\/udp){0,1}))){0,1}$")
+            match = re.search(expr, port)
+            if not match:
+                raise RADLParseException('Invalid outports format.')
+            groups = match.groups()
 
-                local_port_parts = local_port.split("/")
-                if len(local_port_parts) > 1:
-                    local_protocol = local_port_parts[1]
-                    local_port = local_port_parts[0]
-                else:
-                    local_protocol = "tcp"
+            local_protocol = groups[6][1:] if groups[6] else "tcp"
+            remote_protocol = groups[14][1:] if groups[14] else "tcp"
+            if remote_protocol != local_protocol:
+                raise RADLParseException("Different protocols used in local and remote outports.")
 
-                remote_port_parts = remote_port.split("/")
-                if len(remote_port_parts) > 1:
-                    remote_protocol = remote_port_parts[1]
-                    remote_port = remote_port_parts[0]
-                else:
-                    remote_protocol = "tcp"
-
+            if groups[6] == "-":
+                if groups[3] == ":":
+                    raise RADLParseException('Port range (:) and port mapping (-) cannot be combined.')
                 if remote_protocol != local_protocol:
                     raise RADLParseException("Different protocols used in local and remote outports.")
+                res.append(outport(groups[3], groups[11], local_protocol, False, groups[2]))
+            else:
+                # We are in a range
+                if groups[5] == ":":
+                    res.append(outport(groups[3], groups[4][1:], local_protocol, True, groups[2]))
+                else:
+                    res.append(outport(groups[3], groups[11] or groups[3], local_protocol, False, groups[2]))
 
-                res.append(outport(remote_port, local_port, local_protocol))
         return res
