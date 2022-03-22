@@ -1405,7 +1405,8 @@ class outport():
 
     def __eq__(self, other):
         return (self.port_init == other.port_init and self.port_end == other.port_end and
-                self.protocol == other.protocol and self.range == other.range)
+                self.protocol == other.protocol and self.range == other.range and
+                self.remote_cidr == other.remote_cidr)
 
     def __str__(self):
         if self.is_range:
@@ -1467,7 +1468,7 @@ class outport():
             groups = match.groups()
 
             local_protocol = groups[6][1:] if groups[6] else "tcp"
-            remote_protocol = groups[14][1:] if groups[14] else "tcp"
+            remote_protocol = groups[14][1:] if groups[14] else local_protocol
             if remote_protocol != local_protocol:
                 raise RADLParseException("Different protocols used in local and remote outports.")
 
@@ -1476,12 +1477,12 @@ class outport():
                     raise RADLParseException('Port range (:) and port mapping (-) cannot be combined.')
                 if remote_protocol != local_protocol:
                     raise RADLParseException("Different protocols used in local and remote outports.")
-                res.append(outport(groups[3], groups[11], local_protocol, False, groups[2]))
+                res.append(outport(groups[3], groups[11], local_protocol, False, groups[1]))
             else:
                 # We are in a range
                 if groups[5] == ":":
-                    res.append(outport(groups[3], groups[4][1:], local_protocol, True, groups[2]))
+                    res.append(outport(groups[3], groups[4][1:], local_protocol, True, groups[1]))
                 else:
-                    res.append(outport(groups[3], groups[11] or groups[3], local_protocol, False, groups[2]))
+                    res.append(outport(groups[3], groups[11] or groups[3], local_protocol, False, groups[1]))
 
         return res
