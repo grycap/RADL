@@ -168,7 +168,7 @@ def radlToSimple(radl_data):
     Return a list of maps whose values are only other maps or lists.
     """
 
-    aspects = (radl_data.ansible_hosts + radl_data.networks + radl_data.systems +
+    aspects = ([radl_data.description] + radl_data.ansible_hosts + radl_data.networks + radl_data.systems +
                radl_data.configures + radl_data.deploys)
     if radl_data.contextualize.items is not None or radl_data.contextualize.options is not None:
         aspects.append(radl_data.contextualize)
