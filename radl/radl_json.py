@@ -172,6 +172,8 @@ def radlToSimple(radl_data):
                radl_data.configures + radl_data.deploys)
     if radl_data.contextualize.items is not None or radl_data.contextualize.options is not None:
         aspects.append(radl_data.contextualize)
+    if radl_data.description:
+        aspects.append(radl_data.description)
     return [aspectToSimple(a) for a in aspects]
 
 

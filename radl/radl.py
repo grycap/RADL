@@ -1159,6 +1159,8 @@ class RADL:
         """List of deploy."""
         self.configures = []
         """List of configure."""
+        self.description = None
+        """Description item."""
         self.contextualize = contextualize()
         """List of contextualize."""
 
@@ -1184,6 +1186,20 @@ class RADL:
         # If aspect is a contextualization, it is treated separately
         if isinstance(aspect, contextualize):
             self.contextualize.update(aspect)
+            return True
+
+        # if the aspect is a description, it is also treated separately
+        if isinstance(aspect, description):
+            if self.description is None:
+                self.description = aspect
+            elif ifpresent == "error":
+                raise Exception("Description can only be defined once.")
+            elif ifpresent == "replace":
+                self.description = aspect
+            elif ifpresent == "ignore":
+                return False
+            else:
+                raise ValueError
             return True
 
         classification = [(network, self.networks), (system, self.systems), (ansible, self.ansible_hosts),
@@ -1486,3 +1502,15 @@ class outport():
                     res.append(outport(groups[3], groups[11] or groups[3], local_protocol, False, groups[1]))
 
         return res
+
+
+class description(Features, Aspect):
+    """Store a RADL ``description``."""
+
+    def __init__(self, name, features=None, reference=False, line=None):
+        self.id = name
+        """description name."""
+        self.reference = reference
+        """True if it is only a reference and it isn't a definition."""
+        Features.__init__(self, features)
+        self.line = line
