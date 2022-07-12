@@ -448,6 +448,21 @@ deploy vnode-2 1
         r.check()
         self.assertEqual(r.description.getValue("long"), "long desc")
 
+        radl = """
+            description desc (
+                long = 'long desc'
+            )
+            description desc1 (
+                long = 'long1 desc1'
+            )
+            system test (
+                some_value = 'some'
+            )
+            """
+        with self.assertRaises(Exception) as ex:
+            r = parse_radl(radl)
+        self.assertEqual(str(ex.exception), "Description can only be defined once.")
+
 
 if __name__ == "__main__":
     unittest.main()
