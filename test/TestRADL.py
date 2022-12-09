@@ -443,7 +443,6 @@ deploy vnode-2 1
         self.assertEqual(r.description.getValue("long"), "long desc")
 
         radl_json = dump_radl_json(r)
-        print(radl_json)
         r = parse_radl_json(radl_json)
         r.check()
         self.assertEqual(r.description.getValue("long"), "long desc")

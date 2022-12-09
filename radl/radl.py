@@ -1165,8 +1165,12 @@ class RADL:
         """List of contextualize."""
 
     def __str__(self):
-        return "\n".join([str(f) for fs in [self.ansible_hosts, self.networks, self.systems, self.configures,
+        res = ""
+        if self.description:
+            res = str(self.description) + "\n"
+        res += "\n".join([str(f) for fs in [self.ansible_hosts, self.networks, self.systems, self.configures,
                                             [self.contextualize], self.deploys] for f in fs])
+        return res
 
     def add(self, aspect, ifpresent="error"):
         """
@@ -1514,3 +1518,6 @@ class description(Features, Aspect):
         """True if it is only a reference and it isn't a definition."""
         Features.__init__(self, features)
         self.line = line
+
+    def __str__(self):
+        return "description %s (%s)" % (self.id, Features.__str__(self))
