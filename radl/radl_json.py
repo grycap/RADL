@@ -133,7 +133,9 @@ def p_features(a):
         elif isinstance(v, list):
             v = list(v)
             # disks urls can be a list
-            if k.startswith("disk") and k.endswith("image.url"):
+            # also net_interface additional_dns_names
+            if ((k.startswith("disk") and k.endswith("image.url")) or
+                    (k.startswith("net_interface") and k.endswith("additional_dns_names"))):
                 return [Feature(k, "=", v)]
             else:
                 return [Feature(k, "contains", p_feature(i)) for i in v]
