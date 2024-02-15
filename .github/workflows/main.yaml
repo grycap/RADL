@@ -1,4 +1,4 @@
-name: Test IM
+name: Test RADL
 
 on:
   push:
