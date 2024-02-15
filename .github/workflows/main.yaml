@@ -25,7 +25,7 @@ jobs:
         run: pycodestyle --max-line-length=120 --ignore=E402,W504,W605,E722,E741 . --exclude=doc
 
       - name: Unit tests
-        run: python -m coverage run --source=. -m unittest discover -s test -p '*.py'
+        run: python -m coverage run --source=. -m unittest discover -v -s test -p '*.py'
 
       - name: Generate XML coverage report
         run: python -m coverage xml
