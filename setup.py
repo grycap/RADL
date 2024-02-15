@@ -31,4 +31,4 @@ setup(name="RADL", version=version,
                         "Python 2 and Python 3"),
       description="Resource and Application Description Language (RADL) parser.",
       platforms=["any"],
-      install_requires=["ply"])
+      install_requires=["ply", "packaging"])

@@ -16,7 +16,7 @@
 
 import copy
 import re
-from distutils.version import LooseVersion
+from packaging.version import Version
 
 try:
     unicode
@@ -797,7 +797,7 @@ class FeaturesApp(Features):
                 if not other.getValue("version"):
                     return False
                 else:
-                    return LooseVersion(self.getValue("version")) > LooseVersion(other.getValue("version"))
+                    return Version(self.getValue("version")) > Version(other.getValue("version"))
             else:
                 return True
         else:
