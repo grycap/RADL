@@ -69,3 +69,7 @@ RADL 1.31
 RADL 1.32
 
     * Error parsing net_interface.0.additional_dns_names in json.
+
+RADL 1.33
+
+    * Minor internal code changes.
