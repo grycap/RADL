@@ -459,6 +459,28 @@ deploy vnode-2 1
             r = parse_radl(radl)
         self.assertEqual(str(ex.exception), "Description can only be defined once.")
 
+    def test_remove_net_interface(self):
+        radl_data = """
+            network net1 (outbound = 'yes')
+            network net2 ()
+            network net3 ()
+            network net4 (outbound = 'yes')
+            system test (
+            net_interface.0.connection = 'net1' and
+            net_interface.1.connection = 'net2' and
+            net_interface.2.connection = 'net3' and
+            net_interface.3.connection = 'net4' and
+            net_interface.3.dns_name = 'test' and
+            disk.0.os.name = 'linux'
+            )"""
+        radl = parse_radl(radl_data)
+        radl.systems[0].remove_net_interface(1)
+        radl.systems[0].remove_net_interface(1)
+
+        self.assertEqual(radl.systems[0].getValue('net_interface.1.connection'), 'net4')
+        self.assertIsNone(radl.systems[0].getValue('net_interface.2.connection'))
+        self.assertIsNone(radl.systems[0].getValue('net_interface.3.connection'))
+
 
 if __name__ == "__main__":
     unittest.main()

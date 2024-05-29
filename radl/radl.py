@@ -930,6 +930,20 @@ class system(Features, Aspect):
             res.append(netid)
             i += 1
 
+    def remove_net_interface(self, iface_num):
+        """Remove the network interface with that number."""
+        for f in self.features:
+            if (f.prop.startswith("net_interface.%d" % iface_num)):
+                self.delValue(f.prop)
+
+        i = iface_num + 1
+        while self.getValue("net_interface.%d.connection" % i):
+            for f in self.features:
+                if (f.prop.startswith("net_interface.%d" % i)):
+                    self.setValue(f.prop.replace(str(i), str(i - 1)), f.value)
+                    self.delValue(f.prop)
+            i += 1
+
     def getCredentialValues(self, new=False):
         """Return the values in disk.0.os.credentials.*."""
 
