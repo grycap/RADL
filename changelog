@@ -73,3 +73,5 @@ RADL 1.32
 RADL 1.33
 
     * Minor internal code changes.
+    * Add remove_net_interface function.
+
