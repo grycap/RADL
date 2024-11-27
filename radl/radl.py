@@ -29,13 +29,25 @@ def UnitToValue(unit):
 
     if not unit:
         return 1
-    unit = unit[0].upper()
+    unit = unit.upper()
+    if unit.endswith("B"):
+        unit = unit[:-1]
     if unit == "K":
+        return 1000
+    elif unit == "KI":
         return 1024
-    if unit == "M":
+    elif unit == "M":
+        return 1000 * 1000
+    elif unit == "MI":
         return 1024 * 1024
-    if unit == "G":
+    elif unit == "G":
+        return 1000 * 1000 * 1000
+    elif unit == "GI":
         return 1024 * 1024 * 1024
+    elif unit == "T":
+        return 1000 * 1000 * 1000 * 1000
+    elif unit == "TI":
+        return 1024 * 1024 * 1024 * 1024
     return 1
 
 
@@ -1045,7 +1057,8 @@ class system(Features, Aspect):
                 return False
             return True
 
-        mem_units = ["", "B", "K", "M", "G", "KB", "MB", "GB"]
+        mem_units = ["", "B", "K", "M", "G", "T", "KB", "MB", "GB", "TB",
+                     "KI", "MI", "GI", "KIB", "MIB", "GIB", "TIB"]
         SIMPLE_FEATURES = {
             "spot": (str, ["YES", "NO"]),
             "image_type": (str, ["VMDK", "QCOW", "QCOW2", "RAW"]),
