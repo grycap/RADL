@@ -19,7 +19,7 @@
 from radl import __version__ as version
 from setuptools import setup
 
-setup(name="RADL", version=version,
+setup(name="radl", version=version,
       author='GRyCAP - Universitat Politecnica de Valencia',
       author_email='micafer1@upv.es',
       url='https://github.com/grycap/RADL',
