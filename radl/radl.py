@@ -1494,8 +1494,10 @@ class outport():
         res = []
         ports = outports.split(',')
         for port in ports:
-            expr = (r"^((\d{1,3}.\d{1,3}.\d{1,3}.\d{1,3}\/\d{1,2})-){0,1}((\d+)((:)\d+){0,1}((\/tcp|\/udp){0,1}))"
-                    r"((-)((\d+)((:)\d+){0,1}((\/tcp|\/udp){0,1}))){0,1}$")
+            expr = (r"^((\d{1,3}.\d{1,3}.\d{1,3}.\d{1,3}\/\d{1,2})-){0,1}((\d+)((:)\d+){0,1}"
+                    r"((\/tcp|\/udp|\/icmp){0,1}))"
+                    r"((-)((\d+)((:)\d+){0,1}"
+                    r"((\/tcp|\/udp|\/icmp){0,1}))){0,1}$")
             match = re.search(expr, port)
             if not match:
                 raise RADLParseException('Invalid outports format.')
