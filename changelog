@@ -77,3 +77,4 @@ RADL 1.33
 RADL 1.34
 
     * Add ICMP support in outports.
+    * Add XiBytes units

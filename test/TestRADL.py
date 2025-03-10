@@ -66,9 +66,10 @@ class TestRADL(unittest.TestCase):
         s = r.get_system_by_name("main")
         self.assertEqual(s.getValue("cpu.arch"), "x86_64")
         self.assertEqual(s.getValue("net_interface.0.connection"), "publica")
-        self.assertEqual(s.getValue("memory.size"), 536870912)
+        self.assertEqual(s.getValue("memory.size"), 512000000)
         s = r.get_system_by_name("wn")
         self.assertEqual(s.getValue("disk.0.image.url"), ['one://server.com/1', 'one://server2.com/1'])
+        self.assertEqual(s.getValue("memory.size"), 536870912)
 
         radl_json = dump_radl_json(r)
         r = parse_radl_json(radl_json)
@@ -77,9 +78,10 @@ class TestRADL(unittest.TestCase):
         self.assertEqual(s.getValue("cpu.arch"), "x86_64")
         self.assertEqual(s.getValue("net_interface.0.connection"), "publica")
         self.assertEqual(s.getValue("cpu.arch"), "x86_64")
-        self.assertEqual(s.getValue("memory.size"), 536870912)
+        self.assertEqual(s.getValue("memory.size"), 512000000)
         s = r.get_system_by_name("wn")
         self.assertEqual(s.getValue("disk.0.image.url"), ['one://server.com/1', 'one://server2.com/1'])
+        self.assertEqual(s.getValue("memory.size"), 536870912)
 
     def test_references(self):
 
@@ -481,6 +483,20 @@ deploy vnode-2 1
         self.assertEqual(radl.systems[0].getValue('net_interface.1.connection'), 'net4')
         self.assertIsNone(radl.systems[0].getValue('net_interface.2.connection'))
         self.assertIsNone(radl.systems[0].getValue('net_interface.3.connection'))
+
+    def test_units(self):
+        radl_data = """
+            system test (
+                memory.size = 1G and
+                disk.0.size = 10GiB
+            )"""
+        radl = parse_radl(radl_data)
+        self.assertEqual(1, radl.systems[0].getFeature('memory.size').getValue("G"))
+        self.assertEqual(954, radl.systems[0].getFeature('memory.size').getValue("MI"))
+        self.assertEqual(1000, radl.systems[0].getFeature('memory.size').getValue("M"))
+
+        self.assertEqual(10737, radl.systems[0].getFeature('disk.0.size').getValue("M"))
+        self.assertEqual(10240, radl.systems[0].getFeature('disk.0.size').getValue("MI"))
 
 
 if __name__ == "__main__":

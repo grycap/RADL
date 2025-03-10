@@ -12,7 +12,7 @@ disk.0.os.flavour='ubuntu'
 system wn (
 cpu.arch='x86_64' and
 cpu.count>=0.5 and
-memory.size>=512m and
+memory.size>=512mi and
 disk.0.os.name='linux' and
 disk.0.image.url = ['one://server.com/1','one://server2.com/1']
 )
