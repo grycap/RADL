@@ -186,7 +186,7 @@ net_interface.0.connection = 'publica'
             self.radl_check(r)
 
         radl = """
-network publica (outbound = 'yes' and outports='8899-8899,22-22,1:10,10.0.1.0/24-22')
+network publica (outbound = 'yes' and outports='8899-8899,22-22,1:10,10.0.1.0/24-22,1/icmp')
 
 system main (
 net_interface.0.connection = 'publica'
@@ -195,7 +195,8 @@ net_interface.0.connection = 'publica'
         r.check()
         net = r.get_network_by_id('publica')
         expected_res = [outport(8899, 8899, 'tcp'), outport(22, 22, 'tcp'),
-                        outport(1, 10, 'tcp', True), outport(22, 22, 'tcp', False, '10.0.1.0/24')]
+                        outport(1, 10, 'tcp', True), outport(22, 22, 'tcp', False, '10.0.1.0/24'),
+                        outport(1, 1, 'icmp')]
         self.assertEqual(net.getOutPorts(), expected_res)
 
     def test_check_password(self):
