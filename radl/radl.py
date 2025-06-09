@@ -860,19 +860,25 @@ class system(Features, Aspect):
     def __str__(self):
         return "system %s %s" % (self.name, "" if self.reference else "(\n%s\n)\n" % Features.__str__(self))
 
-    def hasIP(self, ip):
+    def hasIP(self, ip, version=4):
         """Return True if some system has this IP."""
-
+        ip_field = ".ip"
+        if version == 6:
+            ip_field = ".ipv6"
         for f in self.features:
             if (f.prop.startswith("net_interface.") and
-                    f.prop.endswith(".ip") and f.value == ip):
+                    f.prop.endswith(ip_field) and f.value == ip):
                 return True
         return False
 
-    def getIfaceIP(self, iface_num):
+    def getIfaceIP(self, iface_num, version=4):
         """Return IP in the interface with that number."""
 
-        ip = self.getValue("net_interface.%d.ip" % iface_num)
+        ip = None
+        if version == 4:
+            ip = self.getValue("net_interface.%d.ip" % iface_num)
+        elif version == 6:
+            ip = self.getValue("net_interface.%d.ipv6" % iface_num)
         if ip:
             return ip
         return None
@@ -1275,7 +1281,7 @@ class RADL:
     def clone(self):
         return copy.deepcopy(self)
 
-    def __getIP(self, public):
+    def __getIP(self, public, version=4):
         """Return the first net_interface.%d.ip for a system in a public/private network."""
 
         maybeNot = (lambda x: x) if public else (lambda x: not x)
@@ -1287,21 +1293,25 @@ class RADL:
                 if not value:
                     break
                 if value in nets_id:
-                    ip = s.getValue("net_interface.%d.ip" % i)
+                    ip = None
+                    if version == 4:
+                        ip = s.getValue("net_interface.%d.ip" % i)
+                    elif version == 6:
+                        ip = s.getValue("net_interface.%d.ipv6" % i)
                     if ip:
                         return ip
                 i += 1
         return None
 
-    def getPublicIP(self):
+    def getPublicIP(self, version=4):
         """Return the first net_interface.%d.ip for a system in a public network."""
 
-        return self.__getIP(True)
+        return self.__getIP(True, version)
 
-    def getPrivateIP(self):
+    def getPrivateIP(self, version=4):
         """Return the first net_interface.%d.ip for a system in a private network."""
 
-        return self.__getIP(False)
+        return self.__getIP(False, version)
 
     def hasPublicNet(self, system_name):
         """ Return true if some system has a public network."""
