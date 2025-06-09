@@ -327,12 +327,14 @@ network public_net_1 ( outbound = 'yes' )
 system node_with_nets (
 net_interface.0.connection = 'public_net_1' and
 net_interface.1.connection = 'public_net' and
-net_interface.1.ip = '10.0.0.1'
+net_interface.1.ip = '10.0.0.1' and
+net_interface.1.ipv6 = '2001:718:801:43b:f816:3eff:fef2:c691'
 )
         """
         r = parse_radl(radl)
         r.check()
         self.assertEqual(r.getPublicIP(), "10.0.0.1")
+        self.assertEqual(r.getPublicIP(version=6), "2001:718:801:43b:f816:3eff:fef2:c691")
 
     def test_add(self):
         str_radl1 = """
