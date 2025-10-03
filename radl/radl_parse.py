@@ -17,7 +17,10 @@
 import ply.lex as lex
 import ply.yacc as yacc
 
+import re
 import os
+from random import choice
+from string import ascii_letters, digits
 from .radl import Feature, RADL, system, network, ansible, configure, contextualize, contextualize_item, \
     deploy, description, SoftFeatures, Features, RADLParseException
 
@@ -393,7 +396,11 @@ class RADLParser:
         elif len(t) == 5:
             t[0] = Feature(t[1], t[2], t[3], unit=t[4], line=t.lineno(1))
         elif len(t) == 4:
-            t[0] = Feature(t[1], t[2], t[3], line=t.lineno(1))
+            value = t[3]
+            if isinstance(value, str) and re.match(r'random\(\d\)', value):
+                length = int(re.findall(r'random\((\d)\)', value)[0])
+                value = ''.join(choice(ascii_letters + digits) for _ in range(length))
+            t[0] = Feature(t[1], t[2], value, line=t.lineno(1))
 
     @staticmethod
     def p_empty(t):

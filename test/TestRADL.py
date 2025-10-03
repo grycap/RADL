@@ -24,6 +24,7 @@ TESTS_PATH = os.path.dirname(os.path.realpath(__file__))
 sys.path.append("..")
 sys.path.append(".")
 
+from mock import patch, MagicMock
 from radl.radl_parse import parse_radl
 from radl.radl import RADL, Features, Feature, RADLParseException, system, outport
 from radl.radl_json import parse_radl as parse_radl_json, dump_radl as dump_radl_json
@@ -499,6 +500,15 @@ deploy vnode-2 1
 
         self.assertEqual(10737, radl.systems[0].getFeature('disk.0.size').getValue("M"))
         self.assertEqual(10240, radl.systems[0].getFeature('disk.0.size').getValue("MI"))
+
+    @patch('radl.radl_parse.choice', MagicMock(side_effect=['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']))
+    def test_random(self):
+        radl_data = """
+            system test (
+                disk.0.os.credentials.new.password = 'random(8)'
+            )"""
+        radl = parse_radl(radl_data)
+        self.assertEqual(radl.systems[0].getValue('disk.0.os.credentials.new.password'), 'abcdefgh')
 
 
 if __name__ == "__main__":
