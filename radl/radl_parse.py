@@ -66,7 +66,8 @@ class RADLParser:
         'STEP',
         'WITH',
         'OPTION',
-        'DESCRIPTION'
+        'DESCRIPTION',
+        'RANDOM'
     )
 
     # A string containing ignored characters (spaces and tabs)
@@ -141,6 +142,12 @@ class RADLParser:
     def t_body_newline(t):
         r'\n'
         t.lexer.lineno += len(t.value)
+
+    @staticmethod
+    def t_RANDOM(t):
+        r"'random\(\d+\)'"
+        t.value = int(re.findall(r'random\((\d)\)', t.value)[0])
+        return t
 
     @staticmethod
     def t_NUMBER(t):
@@ -389,6 +396,7 @@ class RADLParser:
         """feature_simple : VAR comparator NUMBER VAR
                           | VAR comparator NUMBER
                           | VAR comparator LBRACK string_list RBRACK
+                          | VAR comparator RANDOM
                           | VAR comparator STRING"""
 
         if len(t) == 6:
@@ -397,9 +405,8 @@ class RADLParser:
             t[0] = Feature(t[1], t[2], t[3], unit=t[4], line=t.lineno(1))
         elif len(t) == 4:
             value = t[3]
-            if isinstance(value, str) and re.match(r'random\(\d\)', value):
-                length = int(re.findall(r'random\((\d)\)', value)[0])
-                value = ''.join(choice(ascii_letters + digits) for _ in range(length))
+            if t.slice[3].type == 'RANDOM':
+                value = ''.join(choice(ascii_letters + digits) for _ in range(t[3]))
             t[0] = Feature(t[1], t[2], value, line=t.lineno(1))
 
     @staticmethod
