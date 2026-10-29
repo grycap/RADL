@@ -26,7 +26,7 @@ sys.path.append(".")
 
 from mock import patch, MagicMock
 from radl.radl_parse import parse_radl
-from radl.radl import RADL, Features, Feature, RADLParseException, system, outport
+from radl.radl import RADL, Features, Feature, RADLParseException, system, outport, configure, upgrade, contextualize_item
 from radl.radl_json import parse_radl as parse_radl_json, dump_radl as dump_radl_json
 import unittest
 
@@ -230,6 +230,84 @@ otra = 1
         """
         r = parse_radl(radl)
         r.check()
+
+    def test_contextualize_item_string_roundtrip(self):
+        radl = parse_radl("""
+system test (cpu.count>=1)
+configure base (@begin\n---\n- hosts: all\n@end)
+contextualize (system test configure base)
+        """)
+        self.assertIn("system test configure base", str(radl))
+        item = list(radl.contextualize.items.values())[0]
+        self.assertEqual(item.getId(), ("test", "base"))
+
+    def test_reserved_words_remain_valid_identifiers(self):
+        parsed = parse_radl("""
+network upgrade (outbound = 'yes')
+network sequential (outbound = 'yes')
+system upgrade (cpu.count>=1 and upgrade>=1 and sequential>=1)
+system sequential (cpu.count>=1)
+configure sequential (@begin\n---\n- hosts: all\n@end)
+ansible upgrade (host = 'localhost' and credentials.username = 'user' and credentials.password = 'test')
+deploy upgrade 1 sequential
+contextualize (option upgrade = 'yes' option sequential = 1 system upgrade configure sequential)
+        """)
+        parsed.check()
+        self.assertIsNotNone(parsed.get_system_by_name("upgrade"))
+        self.assertIsNotNone(parsed.get_system_by_name("sequential"))
+        self.assertIsNotNone(parsed.get_network_by_id("upgrade"))
+        self.assertIsNotNone(parsed.get_network_by_id("sequential"))
+        self.assertIsNotNone(parsed.get_configure_by_name("sequential"))
+        self.assertEqual(parsed.deploys[0].cloud_id, "sequential")
+        self.assertEqual(len(parsed.ansible_hosts), 1)
+        self.assertEqual(len(parsed.contextualize.options), 2)
+
+    def test_subclass_of_upgrade_serializes_as_upgrade(self):
+        from radl.radl_json import aspectToSimple
+        class ChildUpgrade(upgrade):
+            pass
+
+        self.assertEqual(aspectToSimple(ChildUpgrade("os", "recipe")),
+                         {"class": "upgrade", "id": "os", "recipes": "recipe"})
+
+    def test_configure_subclasses_remain_supported_with_upgrade_aspect(self):
+        class ExtendedConfigure(configure):
+            pass
+
+        radl = RADL()
+        aspect = ExtendedConfigure("extended", "---\\n- hosts: all")
+        radl.add(aspect)
+        self.assertIs(radl.get(aspect), aspect)
+        self.assertIn(aspect, radl.configures)
+
+    def test_upgrade_and_configure_contextualize_ids_do_not_collide(self):
+        normal = contextualize_item("worker", "worker")
+        update = contextualize_item("worker", "worker", upgrade=True)
+        self.assertEqual(normal.getId(), ("worker", "worker"))
+        self.assertNotEqual(normal.getId(), update.getId())
+        self.assertEqual(update.getId(), ("worker", "worker", True))
+
+    def test_upgrade_contextualize_roundtrip_and_json(self):
+        from radl.radl_json import dump_radl, parse_radl as parse_radl_json
+        radl = """
+system worker (cpu.count>=1)
+configure worker (@begin\n---\n- hosts: all\n@end)
+upgrade worker_os (@begin\n---\n- hosts: all\n@end)
+contextualize 600 (system worker upgrade worker_os step 2 with Ansible sequential)
+        """
+        parsed = parse_radl(radl)
+        parsed.check()
+        item = list(parsed.contextualize.items.values())[0]
+        self.assertTrue(item.upgrade)
+        self.assertTrue(item.sequential)
+        self.assertEqual(parsed.get_upgrade_by_name("worker_os").recipes.strip(), "---\n- hosts: all")
+        roundtrip = parse_radl_json(dump_radl(parsed))
+        roundtrip.check()
+        item = list(roundtrip.contextualize.items.values())[0]
+        self.assertTrue(item.upgrade)
+        self.assertTrue(item.sequential)
+        self.assertEqual(roundtrip.get_configure_by_name("worker").recipes,
+                         parsed.get_configure_by_name("worker").recipes)
 
     def test_empty_contextualize(self):
         radl = """
