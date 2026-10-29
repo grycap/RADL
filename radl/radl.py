@@ -587,13 +587,13 @@ class contextualize_item:
 
         if not radl.get_system_by_name(self.system):
             raise RADLParseException("Invalid system id '%s'" % self.system, line=self.line)
-        recipe = radl.get_upgrade_by_name(self.configure) if self.upgrade else radl.get_configure_by_name(self.configure)
+        recipe = (radl.get_upgrade_by_name(self.configure) if self.upgrade else
+                  radl.get_configure_by_name(self.configure))
         if not recipe:
             kind = "upgrade" if self.upgrade else "configure"
             raise RADLParseException("Invalid %s id '%s'" % (kind, self.configure), line=self.line)
         if self.upgrade and self.get_ctxt_tool() != "Ansible":
             raise RADLParseException("Upgrade contextualization requires Ansible", line=self.line)
-
 
 
 class contextualize(Aspect, object):
@@ -1228,8 +1228,8 @@ class RADL:
         res = ""
         if self.description:
             res = str(self.description) + "\n"
-        res += "\n".join([str(f) for fs in [self.ansible_hosts, self.networks, self.systems, self.configures, self.upgrades,
-                                            [self.contextualize], self.deploys] for f in fs])
+        res += "\n".join([str(f) for fs in [self.ansible_hosts, self.networks, self.systems, self.configures,
+                                            self.upgrades, [self.contextualize], self.deploys] for f in fs])
         return res
 
     def add(self, aspect, ifpresent="error"):

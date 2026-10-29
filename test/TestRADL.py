@@ -26,7 +26,8 @@ sys.path.append(".")
 
 from mock import patch, MagicMock
 from radl.radl_parse import parse_radl
-from radl.radl import RADL, Features, Feature, RADLParseException, system, outport, configure, upgrade, contextualize_item
+from radl.radl import (
+    RADL, Features, Feature, RADLParseException, system, outport, configure, upgrade, contextualize_item)
 from radl.radl_json import parse_radl as parse_radl_json, dump_radl as dump_radl_json
 import unittest
 
@@ -264,6 +265,7 @@ contextualize (option upgrade = 'yes' option sequential = 1 system upgrade confi
 
     def test_subclass_of_upgrade_serializes_as_upgrade(self):
         from radl.radl_json import aspectToSimple
+
         class ChildUpgrade(upgrade):
             pass
 

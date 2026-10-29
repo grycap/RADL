@@ -17,7 +17,7 @@ import os
 
 try:
     unicode
-except:
+except NameError:
     unicode = bytes
 
 try:
@@ -34,7 +34,7 @@ from .radl import Feature, Features, Aspect, RADL, configure, upgrade, contextua
 
 try:
     import radl.radl as radl
-except:
+except ImportError:
     import radl
 
 
