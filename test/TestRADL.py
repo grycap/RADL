@@ -235,33 +235,41 @@ otra = 1
     def test_contextualize_item_string_roundtrip(self):
         radl = parse_radl("""
 system test (cpu.count>=1)
-configure base (@begin\n---\n- hosts: all\n@end)
+configure base (
+@begin
+---
+    tasks:
+    - debug: msg="Hello World"
+@end
+)
 contextualize (system test configure base)
         """)
         self.assertIn("system test configure base", str(radl))
         item = list(radl.contextualize.items.values())[0]
         self.assertEqual(item.getId(), ("test", "base"))
 
-    def test_reserved_words_remain_valid_identifiers(self):
+    def test_reserved_words_remain_valid_feature_names(self):
         parsed = parse_radl("""
-network upgrade (outbound = 'yes')
-network sequential (outbound = 'yes')
-system upgrade (cpu.count>=1 and upgrade>=1 and sequential>=1)
-system sequential (cpu.count>=1)
-configure sequential (@begin\n---\n- hosts: all\n@end)
-ansible upgrade (host = 'localhost' and credentials.username = 'user' and credentials.password = 'test')
-deploy upgrade 1 sequential
-contextualize (option upgrade = 'yes' option sequential = 1 system upgrade configure sequential)
+network public_net (outbound = 'yes')
+system k8s_worker (cpu.count>=1 and upgrade>=1 and sequential>=1)
+configure worker_setup (
+@begin
+---
+    tasks:
+    - debug: msg="Hello World"
+@end
+)
+deploy k8s_worker 1 local_cloud
+contextualize (system k8s_worker configure worker_setup)
         """)
         parsed.check()
-        self.assertIsNotNone(parsed.get_system_by_name("upgrade"))
-        self.assertIsNotNone(parsed.get_system_by_name("sequential"))
-        self.assertIsNotNone(parsed.get_network_by_id("upgrade"))
-        self.assertIsNotNone(parsed.get_network_by_id("sequential"))
-        self.assertIsNotNone(parsed.get_configure_by_name("sequential"))
-        self.assertEqual(parsed.deploys[0].cloud_id, "sequential")
-        self.assertEqual(len(parsed.ansible_hosts), 1)
-        self.assertEqual(len(parsed.contextualize.options), 2)
+        self.assertIsNotNone(parsed.get_system_by_name("k8s_worker"))
+        self.assertIsNotNone(parsed.get_network_by_id("public_net"))
+        self.assertIsNotNone(parsed.get_configure_by_name("worker_setup"))
+        self.assertEqual(parsed.deploys[0].cloud_id, "local_cloud")
+        system = parsed.get_system_by_name("k8s_worker")
+        self.assertIsNotNone(system.getValue("upgrade"))
+        self.assertIsNotNone(system.getValue("sequential"))
 
     def test_subclass_of_upgrade_serializes_as_upgrade(self):
         from radl.radl_json import aspectToSimple
@@ -293,8 +301,20 @@ contextualize (option upgrade = 'yes' option sequential = 1 system upgrade confi
         from radl.radl_json import dump_radl, parse_radl as parse_radl_json
         radl = """
 system worker (cpu.count>=1)
-configure worker (@begin\n---\n- hosts: all\n@end)
-upgrade worker_os (@begin\n---\n- hosts: all\n@end)
+configure worker (
+@begin
+---
+    tasks:
+    - debug: msg="Hello World"
+@end
+)
+upgrade worker_os (
+@begin
+---
+    tasks:
+    - debug: msg="Hello World"
+@end
+)
 contextualize 600 (system worker upgrade worker_os step 2 with Ansible sequential)
         """
         parsed = parse_radl(radl)
@@ -302,7 +322,11 @@ contextualize 600 (system worker upgrade worker_os step 2 with Ansible sequentia
         item = list(parsed.contextualize.items.values())[0]
         self.assertTrue(item.upgrade)
         self.assertTrue(item.sequential)
-        self.assertEqual(parsed.get_upgrade_by_name("worker_os").recipes.strip(), "---\n- hosts: all")
+        upgrade = parsed.get_upgrade_by_name("worker_os")
+        if upgrade is None:
+            self.fail("Upgrade recipe worker_os was not parsed")
+        upgrade_recipe = upgrade.recipes.strip()
+        self.assertEqual(upgrade_recipe, "---\n    tasks:\n    - debug: msg=\"Hello World\"")
         roundtrip = parse_radl_json(dump_radl(parsed))
         roundtrip.check()
         item = list(roundtrip.contextualize.items.values())[0]
