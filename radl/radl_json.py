@@ -17,7 +17,7 @@ import os
 
 try:
     unicode
-except:
+except NameError:
     unicode = bytes
 
 try:
@@ -29,12 +29,12 @@ try:
 except ImportError:
     yaml = None
 
-from .radl import Feature, Features, Aspect, RADL, configure, contextualize, contextualize_item, \
+from .radl import Feature, Features, Aspect, RADL, configure, upgrade, contextualize, contextualize_item, \
     deploy, SoftFeatures, RADLParseException, UnitToValue
 
 try:
     import radl.radl as radl
-except:
+except ImportError:
     import radl
 
 
@@ -75,6 +75,8 @@ def p_aspect(a):
     assert "class" in a
     if a["class"] == "configure":
         return p_configure(a)
+    elif a["class"] == "upgrade":
+        return p_upgrade(a)
     elif a["class"] == "contextualize":
         return p_contextualize(a)
     elif a["class"] == "deploy":
@@ -96,6 +98,13 @@ def p_configure(a):
     return configure(a["id"], recipes)
 
 
+def p_upgrade(a):
+    assert a["class"] == "upgrade"
+    if a.get("reference", False):
+        return upgrade(a["id"], reference=True)
+    return upgrade(a["id"], a.get("recipes"))
+
+
 def p_contextualize(a):
     assert a["class"] == "contextualize"
     return contextualize([p_contextualize_item(i) for i in a.get("items", [])],
@@ -104,7 +113,8 @@ def p_contextualize(a):
 
 
 def p_contextualize_item(a):
-    return contextualize_item(a["system"], a["configure"], a.get("step", 0), a.get("ctxt_tool", None))
+    return contextualize_item(a["system"], a["configure"], a.get("step", 0), a.get("ctxt_tool", None),
+                              upgrade=a.get("upgrade", False), sequential=a.get("sequential", False))
 
 
 def p_deploy(a):
@@ -171,7 +181,7 @@ def radlToSimple(radl_data):
     """
 
     aspects = (radl_data.ansible_hosts + radl_data.networks + radl_data.systems +
-               radl_data.configures + radl_data.deploys)
+               radl_data.configures + radl_data.upgrades + radl_data.deploys)
     if radl_data.contextualize.items is not None or radl_data.contextualize.options is not None:
         aspects.append(radl_data.contextualize)
     if radl_data.description:
@@ -182,6 +192,8 @@ def radlToSimple(radl_data):
 def aspectToSimple(a):
     if isinstance(a, Features):
         return cfeaturesToSimple(a)
+    elif isinstance(a, upgrade):
+        return upgradeToSimple(a)
     elif isinstance(a, configure):
         return configureToSimple(a)
     elif isinstance(a, contextualize):
@@ -197,6 +209,13 @@ def configureToSimple(a):
         return {"class": "configure", "id": a.name, "reference": True}
     else:
         return {"class": "configure", "id": a.name, "recipes": a.recipes}
+
+
+def upgradeToSimple(a):
+    assert isinstance(a, upgrade)
+    if a.reference:
+        return {"class": "upgrade", "id": a.name, "reference": True}
+    return {"class": "upgrade", "id": a.name, "recipes": a.recipes}
 
 
 def contextualizeToSimple(a):
@@ -219,6 +238,10 @@ def contextualizeItemToSimple(a):
         r["step"] = a.num
     if a.ctxt_tool:
         r["ctxt_tool"] = a.ctxt_tool
+    if a.upgrade:
+        r["upgrade"] = True
+    if a.sequential:
+        r["sequential"] = True
     return r
 
 
