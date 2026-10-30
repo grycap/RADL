@@ -547,39 +547,53 @@ class Aspect:
 
 class contextualize_item:
     """Store a line under ``contextualize`` RADL keyword."""
-    def __init__(self, system_id, configure_id, num=0, ctxt_tool=None, line=None):
+    def __init__(self, system_id, configure_id, num=0, ctxt_tool=None, line=None, upgrade=False, sequential=False):
         self.system = system_id
         """System id."""
         self.configure = configure_id
-        """Configure id."""
+        """Configure/upgrade recipe id."""
         self.num = num
         """Num of steps (optional)."""
         self.ctxt_tool = ctxt_tool
-        """Name of the Ctxt. tool (optional). Currently supported: 'Ansible' and 'cloud-init'. Default 'Ansible'."""
+        """Name of the Ctxt. tool (optional)."""
         self.line = line
+        self.upgrade = upgrade
+        self.sequential = sequential
 
     def __str__(self):
-        return "system %s configure %s %s %s" % (self.system, self.configure,
-                                                 "step " + str(self.num) if self.num else "",
-                                                 "with " + self.ctxt_tool if self.ctxt_tool else "")
+        kind = "upgrade" if self.upgrade else "configure"
+        modifiers = ["step " + str(self.num) if self.num else "",
+                     "with " + self.ctxt_tool if self.ctxt_tool else "",
+                     "sequential" if self.sequential else ""]
+        return "system %s %s %s %s" % (self.system, kind, self.configure, " ".join(filter(None, modifiers)))
 
     def getId(self):
         """Return an unique key for this element."""
 
-        return (self.system, self.configure)
+        return (self.system, self.configure, True) if self.upgrade else (self.system, self.configure)
 
     def get_ctxt_tool(self):
         """Return the name of the Ctxt. tool."""
 
         return self.ctxt_tool if self.ctxt_tool else "Ansible"
 
+    def get_playbook_name(self):
+        """Return the task name used by the IM for this recipe."""
+        prefix = "upgrade_" if self.upgrade else ""
+        return prefix + self.configure + "_" + self.system
+
     def check(self, radl):
         """Check a line under a contextualize."""
 
         if not radl.get_system_by_name(self.system):
             raise RADLParseException("Invalid system id '%s'" % self.system, line=self.line)
-        if not radl.get_configure_by_name(self.configure):
-            raise RADLParseException("Invalid configure id '%s'" % self.configure, line=self.line)
+        recipe = (radl.get_upgrade_by_name(self.configure) if self.upgrade else
+                  radl.get_configure_by_name(self.configure))
+        if not recipe:
+            kind = "upgrade" if self.upgrade else "configure"
+            raise RADLParseException("Invalid %s id '%s'" % (kind, self.configure), line=self.line)
+        if self.upgrade and self.get_ctxt_tool() != "Ansible":
+            raise RADLParseException("Upgrade contextualization requires Ansible", line=self.line)
 
 
 class contextualize(Aspect, object):
@@ -704,6 +718,17 @@ class configure(Aspect):
         except Exception as e:
             raise RADLParseException("Invalid YAML code: %s." % e, line=self.line)
         return True
+
+
+class upgrade(configure):
+    """Store an embedded RADL upgrade recipe."""
+
+    def __str__(self):
+        if self.reference:
+            return "upgrade %s" % self.name
+        if self.recipes is None:
+            return "upgrade %s ()" % self.name
+        return "upgrade %s (\n@begin\n%s\n@end\n)" % (self.name, self.recipes)
 
 
 class deploy(Aspect):
@@ -1192,6 +1217,8 @@ class RADL:
         """List of deploy."""
         self.configures = []
         """List of configure."""
+        self.upgrades = []
+        """List of upgrade recipes."""
         self.description = None
         """Description item."""
         self.contextualize = contextualize()
@@ -1202,7 +1229,7 @@ class RADL:
         if self.description:
             res = str(self.description) + "\n"
         res += "\n".join([str(f) for fs in [self.ansible_hosts, self.networks, self.systems, self.configures,
-                                            [self.contextualize], self.deploys] for f in fs])
+                                            self.upgrades, [self.contextualize], self.deploys] for f in fs])
         return res
 
     def add(self, aspect, ifpresent="error"):
@@ -1239,11 +1266,14 @@ class RADL:
                 raise ValueError
             return True
 
-        classification = [(network, self.networks), (system, self.systems), (ansible, self.ansible_hosts),
-                          (deploy, self.deploys), (configure, self.configures)]
-        aspect_list = [l for t, l in classification if isinstance(aspect, t)]
-        assert len(aspect_list) == 1, "Unexpected aspect for RADL."
-        aspect_list = aspect_list[0]
+        if isinstance(aspect, upgrade):
+            aspect_list = self.upgrades
+        else:
+            classification = [(network, self.networks), (system, self.systems), (ansible, self.ansible_hosts),
+                              (deploy, self.deploys), (configure, self.configures)]
+            aspect_lists = [items for aspect_type, items in classification if isinstance(aspect, aspect_type)]
+            assert len(aspect_lists) == 1, "Unexpected aspect for RADL."
+            aspect_list = aspect_lists[0]
 
         old_aspect = [a for a in aspect_list if a.getId() == aspect.getId()]
         if old_aspect:
@@ -1269,11 +1299,13 @@ class RADL:
     def get(self, aspect):
         """Get a network, system or configure or contextualize with the same id as aspect passed."""
 
-        classification = [(network, self.networks), (system, self.systems),
-                          (configure, self.configures)]
-        aspect_list = [l for t, l in classification if isinstance(aspect, t)]
-        assert len(aspect_list) == 1, "Unexpected aspect for RADL."
-        aspect_list = aspect_list[0]
+        if isinstance(aspect, upgrade):
+            aspect_list = self.upgrades
+        else:
+            classification = [(network, self.networks), (system, self.systems), (configure, self.configures)]
+            aspect_lists = [items for aspect_type, items in classification if isinstance(aspect, aspect_type)]
+            assert len(aspect_lists) == 1, "Unexpected aspect for RADL."
+            aspect_list = aspect_lists[0]
 
         old_aspect = [a for a in aspect_list if a.getId() == aspect.getId()]
         return old_aspect[0] if old_aspect else None
@@ -1334,7 +1366,7 @@ class RADL:
         """Check if it is a valid RADL document."""
 
         for i in [f for fs in [self.networks, self.ansible_hosts, self.systems, self.deploys,
-                               self.configures, [self.contextualize]] for f in fs]:
+                               self.configures, self.upgrades, [self.contextualize]] for f in fs]:
             i.check(self)
 
         snames = [s.name for s in self.systems]
@@ -1367,6 +1399,13 @@ class RADL:
         """Return a configure with that id or None."""
 
         for elem in self.configures:
+            if elem.name == name:
+                return elem
+        return None
+
+    def get_upgrade_by_name(self, name):
+        """Return an upgrade recipe with that id or None."""
+        for elem in self.upgrades:
             if elem.name == name:
                 return elem
         return None

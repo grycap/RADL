@@ -21,7 +21,7 @@ import re
 import os
 from random import choice
 from string import ascii_letters, digits
-from .radl import Feature, RADL, system, network, ansible, configure, contextualize, contextualize_item, \
+from .radl import Feature, RADL, system, network, ansible, configure, upgrade, contextualize, contextualize_item, \
     deploy, description, SoftFeatures, Features, RADLParseException
 
 
@@ -29,7 +29,7 @@ class RADLParser:
 
     def __init__(self, **kwargs):
         self.lexer = lex.lex(module=self, debug=0, optimize=0, **kwargs)
-        self.yacc = yacc.yacc(module=self, debug=0, optimize=0)
+        self.yacc = yacc.yacc(module=self, start='radl', debug=0, optimize=0)
 
     states = (
         ('recipe', 'exclusive'),
@@ -56,6 +56,8 @@ class RADLParser:
         'CONTAINS',
         'DEPLOY',
         'CONFIGURE',
+        'UPGRADE',
+        'SEQUENTIAL',
         'SYSTEM',
         'NETWORK',
         'ANSIBLE',
@@ -174,6 +176,8 @@ class RADLParser:
         'contains': 'CONTAINS',
         'deploy': 'DEPLOY',
         'configure': 'CONFIGURE',
+        'upgrade': 'UPGRADE',
+        'sequential': 'SEQUENTIAL',
         'contextualize': 'CONTEXTUALIZE',
         'step': 'STEP',
         'with': 'WITH',
@@ -213,6 +217,13 @@ class RADLParser:
         t.lexer.skip(1)
 
     @staticmethod
+    def p_identifier(t):
+        """identifier : VAR
+                        | UPGRADE
+                        | SEQUENTIAL"""
+        t[0] = t[1]
+
+    @staticmethod
     def p_radl(t):
         """radl : radl radl_sentence
                 | radl_sentence
@@ -235,14 +246,15 @@ class RADLParser:
                          | ansible_sentence
                          | system_sentence
                          | configure_sentence
+                         | upgrade_sentence
                          | contextualize_sentence
                          | deploy_sentence"""
         t[0] = t[1]
 
     @staticmethod
     def p_description_sentence(t):
-        """description_sentence : DESCRIPTION VAR
-                                | DESCRIPTION VAR LPAREN features RPAREN"""
+        """description_sentence : DESCRIPTION identifier
+                                | DESCRIPTION identifier LPAREN features RPAREN"""
 
         if len(t) == 3:
             t[0] = description(t[2], reference=True, line=t.lineno(1))
@@ -251,9 +263,9 @@ class RADLParser:
 
     @staticmethod
     def p_configure_sentence(t):
-        """configure_sentence : CONFIGURE VAR
-                              | CONFIGURE VAR LPAREN RECIPE_BEGIN recipe RECIPE_END RPAREN
-                              | CONFIGURE VAR LPAREN RPAREN"""
+        """configure_sentence : CONFIGURE identifier
+                              | CONFIGURE identifier LPAREN RECIPE_BEGIN recipe RECIPE_END RPAREN
+                              | CONFIGURE identifier LPAREN RPAREN"""
 
         if len(t) == 3:
             t[0] = configure(t[2], reference=True, line=t.lineno(1))
@@ -261,6 +273,18 @@ class RADLParser:
             t[0] = configure(t[2], None, line=t.lineno(1))
         else:
             t[0] = configure(t[2], t[5], line=t.lineno(1))
+
+    @staticmethod
+    def p_upgrade_sentence(t):
+        """upgrade_sentence : UPGRADE identifier
+                            | UPGRADE identifier LPAREN RECIPE_BEGIN recipe RECIPE_END RPAREN
+                            | UPGRADE identifier LPAREN RPAREN"""
+        if len(t) == 3:
+            t[0] = upgrade(t[2], reference=True, line=t.lineno(1))
+        elif len(t) == 5:
+            t[0] = upgrade(t[2], None, line=t.lineno(1))
+        else:
+            t[0] = upgrade(t[2], t[5], line=t.lineno(1))
 
     @staticmethod
     def p_recipe(t):
@@ -273,8 +297,8 @@ class RADLParser:
 
     @staticmethod
     def p_deploy_sentence(t):
-        """deploy_sentence : DEPLOY VAR NUMBER
-                           | DEPLOY VAR NUMBER VAR"""
+        """deploy_sentence : DEPLOY identifier NUMBER
+                           | DEPLOY identifier NUMBER identifier"""
 
         if len(t) == 4:
             t[0] = deploy(t[2], t[3], line=t.lineno(1))
@@ -306,8 +330,8 @@ class RADLParser:
 
     @staticmethod
     def p_contextualize_option(t):
-        """contextualize_option : OPTION VAR comparator STRING
-                                | OPTION VAR comparator NUMBER"""
+        """contextualize_option : OPTION identifier comparator STRING
+                                | OPTION identifier comparator NUMBER"""
 
         t[0] = Feature(t[2], t[3], t[4], line=t.lineno(1))
 
@@ -326,21 +350,44 @@ class RADLParser:
 
     @staticmethod
     def p_contextualize_item(t):
-        """contextualize_item : SYSTEM VAR CONFIGURE VAR
-                              | SYSTEM VAR CONFIGURE VAR STEP NUMBER
-                              | SYSTEM VAR CONFIGURE VAR WITH VAR"""
+        """contextualize_item : SYSTEM identifier configure_kind identifier contextualize_modifiers"""
+        opts = {"num": 0, "ctxt_tool": None, "sequential": False}
+        for kind, value in t[5]:
+            if kind == "step":
+                opts["num"] = value
+            elif kind == "with":
+                opts["ctxt_tool"] = value
+            else:
+                opts["sequential"] = True
+        t[0] = contextualize_item(t[2], t[4], line=t.lineno(1),
+                                  upgrade=t[3] == "upgrade", **opts)
 
-        if len(t) == 5:
-            t[0] = contextualize_item(t[2], t[4], line=t.lineno(1))
-        elif t[5] == "with":
-            t[0] = contextualize_item(t[2], t[4], ctxt_tool=t[6], line=t.lineno(1))
+    @staticmethod
+    def p_configure_kind(t):
+        """configure_kind : CONFIGURE
+                           | UPGRADE"""
+        t[0] = t[1]
+
+    @staticmethod
+    def p_contextualize_modifiers(t):
+        """contextualize_modifiers : contextualize_modifiers contextualize_modifier
+                                   | empty"""
+        t[0] = (t[1] or []) + ([t[2]] if len(t) == 3 else [])
+
+    @staticmethod
+    def p_contextualize_modifier(t):
+        """contextualize_modifier : STEP NUMBER
+                                  | WITH identifier
+                                  | SEQUENTIAL"""
+        if len(t) == 2:
+            t[0] = ("sequential", True)
         else:
-            t[0] = contextualize_item(t[2], t[4], num=t[6], line=t.lineno(1))
+            t[0] = (t[1], t[2])
 
     @staticmethod
     def p_network_sentence(t):
-        """network_sentence : NETWORK VAR
-                            | NETWORK VAR LPAREN features RPAREN"""
+        """network_sentence : NETWORK identifier
+                            | NETWORK identifier LPAREN features RPAREN"""
 
         if len(t) == 3:
             t[0] = network(t[2], reference=True, line=t.lineno(1))
@@ -349,14 +396,14 @@ class RADLParser:
 
     @staticmethod
     def p_ansible_sentence(t):
-        """ansible_sentence : ANSIBLE VAR LPAREN features RPAREN"""
+        """ansible_sentence : ANSIBLE identifier LPAREN features RPAREN"""
 
         t[0] = ansible(t[2], t[4], line=t.lineno(1))
 
     @staticmethod
     def p_system_sentence(t):
-        """system_sentence : SYSTEM VAR
-                           | SYSTEM VAR LPAREN features RPAREN"""
+        """system_sentence : SYSTEM identifier
+                           | SYSTEM identifier LPAREN features RPAREN"""
 
         if len(t) == 3:
             t[0] = system(t[2], reference=True, line=t.lineno(1))
@@ -393,11 +440,11 @@ class RADLParser:
 
     @staticmethod
     def p_feature_simple(t):
-        """feature_simple : VAR comparator NUMBER VAR
-                          | VAR comparator NUMBER
-                          | VAR comparator LBRACK string_list RBRACK
-                          | VAR comparator RANDOM
-                          | VAR comparator STRING"""
+        """feature_simple : identifier comparator NUMBER identifier
+                          | identifier comparator NUMBER
+                          | identifier comparator LBRACK string_list RBRACK
+                          | identifier comparator RANDOM
+                          | identifier comparator STRING"""
 
         if len(t) == 6:
             t[0] = Feature(t[1], t[2], t[4], line=t.lineno(1))
@@ -427,7 +474,7 @@ class RADLParser:
 
     @staticmethod
     def p_feature_contains(t):
-        """feature_contains : VAR CONTAINS LPAREN features RPAREN"""
+        """feature_contains : identifier CONTAINS LPAREN features RPAREN"""
 
         t[0] = Feature(t[1], t[2], Features(t[4]), line=t.lineno(1))
 
